@@ -1,0 +1,107 @@
+import React, { useState } from 'react'
+import { Link, useLocation } from 'react-router-dom'
+import { useBackup } from '@/hooks/useBackup'
+import { Button } from '@/components/common/Button'
+
+export const Navbar: React.FC = () => {
+  const location = useLocation()
+  const { handleExport, handleImport, isExporting, isImporting } = useBackup()
+  const [showImport, setShowImport] = useState(false)
+
+  const isActive = (path: string) => location.pathname === path
+
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (file) {
+      try {
+        await handleImport(file)
+      } catch (error) {
+        alert('Erro ao importar arquivo. Verifique se o arquivo é válido.')
+      }
+    }
+    setShowImport(false)
+  }
+
+  return (
+    <nav className="bg-white/80 backdrop-blur-md shadow-soft border-b border-gray-100 sticky top-0 z-50">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="flex justify-between items-center h-16">
+          <div className="flex items-center space-x-8">
+            <Link to="/" className="text-xl font-bold bg-gradient-to-r from-primary-600 to-primary-500 bg-clip-text text-transparent flex items-center gap-2">
+              <span className="text-2xl">💰</span> Budget Tracker
+            </Link>
+            <div className="flex space-x-2">
+              <Link
+                to="/"
+                className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+                  isActive('/')
+                    ? 'bg-gradient-to-r from-primary-500 to-primary-600 text-white shadow-md'
+                    : 'text-gray-700 hover:bg-gray-100'
+                }`}
+              >
+                Dashboard
+              </Link>
+              <Link
+                to="/transactions"
+                className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+                  isActive('/transactions')
+                    ? 'bg-gradient-to-r from-primary-500 to-primary-600 text-white shadow-md'
+                    : 'text-gray-700 hover:bg-gray-100'
+                }`}
+              >
+                Transações
+              </Link>
+              <Link
+                to="/budget"
+                className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+                  isActive('/budget')
+                    ? 'bg-gradient-to-r from-primary-500 to-primary-600 text-white shadow-md'
+                    : 'text-gray-700 hover:bg-gray-100'
+                }`}
+              >
+                Orçamento
+              </Link>
+              <Link
+                to="/setup"
+                className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+                  isActive('/setup')
+                    ? 'bg-gradient-to-r from-primary-500 to-primary-600 text-white shadow-md'
+                    : 'text-gray-700 hover:bg-gray-100'
+                }`}
+              >
+                Configuração
+              </Link>
+            </div>
+          </div>
+          <div className="flex items-center space-x-2">
+            <Button
+              variant="secondary"
+              size="sm"
+              onClick={handleExport}
+              disabled={isExporting}
+            >
+              {isExporting ? 'Exportando...' : 'Exportar'}
+            </Button>
+            <Button
+              variant="secondary"
+              size="sm"
+              onClick={() => setShowImport(true)}
+              disabled={isImporting}
+            >
+              Importar
+            </Button>
+            {showImport && (
+              <input
+                type="file"
+                accept=".json"
+                onChange={handleFileChange}
+                className="hidden"
+                ref={(input) => input?.click()}
+              />
+            )}
+          </div>
+        </div>
+      </div>
+    </nav>
+  )
+}
