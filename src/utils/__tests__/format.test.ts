@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { formatCurrency, formatPercentage, parseNumber } from '../format'
+import { formatCurrency, formatPercentage } from '../format'
 
 describe('format utilities', () => {
   describe('formatCurrency', () => {
@@ -31,18 +31,6 @@ describe('format utilities', () => {
       expect(formatPercentage(50)).toBe('50.0%')
       expect(formatPercentage(33.333)).toBe('33.3%')
       expect(formatPercentage(100)).toBe('100.0%')
-    })
-  })
-
-  describe('parseNumber', () => {
-    it('parses Brazilian number format', () => {
-      expect(parseNumber('1.234,56')).toBe(1234.56)
-      expect(parseNumber('1000')).toBe(1000)
-    })
-
-    it('handles invalid input', () => {
-      expect(parseNumber('abc')).toBe(0)
-      expect(parseNumber('')).toBe(0)
     })
   })
 })

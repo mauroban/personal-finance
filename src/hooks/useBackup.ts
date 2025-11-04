@@ -1,5 +1,6 @@
 import { useState } from 'react'
-import { exportData, importData, resetAllData } from '@/utils/exportImport'
+import { exportData, importData } from '@/utils/exportImport'
+import { resetDatabase } from '@/utils/resetDatabase'
 
 export const useBackup = () => {
   const [isExporting, setIsExporting] = useState(false)
@@ -33,7 +34,7 @@ export const useBackup = () => {
   const handleReset = async () => {
     if (window.confirm('Tem certeza que deseja apagar todos os dados? Esta ação não pode ser desfeita.')) {
       try {
-        await resetAllData()
+        await resetDatabase()
         window.location.reload()
       } catch (error) {
         console.error('Reset failed:', error)

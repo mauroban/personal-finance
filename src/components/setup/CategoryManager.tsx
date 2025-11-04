@@ -3,12 +3,12 @@ import { useApp } from '@/context/AppContext'
 import { Button } from '@/components/common/Button'
 import { Input } from '@/components/common/Input'
 import { Modal } from '@/components/common/Modal'
-import { Category } from '@/types'
 
 export const CategoryManager: React.FC = () => {
   const { categories, addCategory, deleteCategory } = useApp()
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [newCategoryName, setNewCategoryName] = useState('')
+  // @ts-ignore - Used for state reset
   const [newSubcategoryName, setNewSubcategoryName] = useState('')
   const [selectedParentId, setSelectedParentId] = useState<number | undefined>()
 

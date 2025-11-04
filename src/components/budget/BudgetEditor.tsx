@@ -1,8 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { useApp } from '@/context/AppContext'
-import { formatCurrency } from '@/utils/format'
-import { Input } from '@/components/common/Input'
-import { Button } from '@/components/common/Button'
+import { dateToMonthNumber, monthNumberToDate } from '@/utils/date'
+import { DEFAULT_INSTALLMENT_COUNT } from '@/constants/budgetModes'
 import { db } from '@/db'
 
 interface BudgetEditorProps {
@@ -11,7 +10,7 @@ interface BudgetEditorProps {
 }
 
 export const BudgetEditor: React.FC<BudgetEditorProps> = ({ year, month }) => {
-  const { categories, sources, budgets, addBudget, updateBudget, deleteBudget, refreshBudgets } = useApp()
+  const { categories, sources, budgets, addBudget, updateBudget, refreshBudgets } = useApp()
   const [budgetValues, setBudgetValues] = useState<Record<string, number>>({})
   const [rawCentValues, setRawCentValues] = useState<Record<string, string>>({})
   const [focusedField, setFocusedField] = useState<string | null>(null)
@@ -179,7 +178,7 @@ export const BudgetEditor: React.FC<BudgetEditorProps> = ({ year, month }) => {
 
     // Calculate actual value for installments
     const mode = budgetModes[key] || 'unique'
-    const installmentCount = installmentCounts[key] || 2
+    const installmentCount = installmentCounts[key] || DEFAULT_INSTALLMENT_COUNT
     const actualValue = mode === 'installment' ? value * installmentCount : value
 
     // Save to database on blur
@@ -282,7 +281,7 @@ export const BudgetEditor: React.FC<BudgetEditorProps> = ({ year, month }) => {
     }
 
     const mode = existingBudget.mode || (existingBudget.isRecurrent ? 'recurring' : 'unique')
-    const currentDate = year * 12 + month
+    const currentDate = dateToMonthNumber(year, month)
 
     // If recurring or installment, we need to handle past and future instances differently
     if (mode === 'recurring' || mode === 'installment') {
@@ -300,7 +299,7 @@ export const BudgetEditor: React.FC<BudgetEditorProps> = ({ year, month }) => {
 
       // Find the start date (earliest occurrence)
       const startDate = matchingBudgets.length > 0
-        ? Math.min(...matchingBudgets.map(b => b.year * 12 + b.month))
+        ? Math.min(...matchingBudgets.map(b => dateToMonthNumber(b.year, b.month)))
         : currentDate
 
       // Determine the end date for installments
@@ -311,18 +310,18 @@ export const BudgetEditor: React.FC<BudgetEditorProps> = ({ year, month }) => {
 
       // Separate past and current/future budgets
       const pastBudgets = matchingBudgets.filter(b => {
-        const budgetDate = b.year * 12 + b.month
+        const budgetDate = dateToMonthNumber(b.year, b.month)
         return budgetDate < currentDate && (mode === 'recurring' || budgetDate < endDate)
       })
 
       const currentAndFutureBudgets = matchingBudgets.filter(b => {
-        const budgetDate = b.year * 12 + b.month
+        const budgetDate = dateToMonthNumber(b.year, b.month)
         return budgetDate >= currentDate && (mode === 'recurring' || budgetDate < endDate)
       })
 
       // Create a set of existing past months
       const existingPastMonths = new Set(
-        pastBudgets.map(b => b.year * 12 + b.month)
+        pastBudgets.map(b => dateToMonthNumber(b.year, b.month))
       )
 
       // Fill in missing past months by creating them as unique budgets
@@ -335,10 +334,7 @@ export const BudgetEditor: React.FC<BudgetEditorProps> = ({ year, month }) => {
 
       // Create missing past budgets as unique
       for (const monthNum of missingMonthsToCreate) {
-        const y = Math.floor(monthNum / 12)
-        const m = monthNum % 12 || 12
-        const actualYear = m === 12 ? y - 1 : y
-        const actualMonth = m
+        const { year: actualYear, month: actualMonth } = monthNumberToDate(monthNum)
 
         const newBudget = {
           year: actualYear,
@@ -439,7 +435,7 @@ export const BudgetEditor: React.FC<BudgetEditorProps> = ({ year, month }) => {
           {sources.map(source => {
             const key = `income-${source.id}`
             const mode = budgetModes[key] || 'unique'
-            const installmentCount = installmentCounts[key] || 2
+            const installmentCount = installmentCounts[key] || DEFAULT_INSTALLMENT_COUNT
 
             return (
               <div key={source.id} className="flex items-center gap-3 p-3 border border-gray-200 rounded-lg hover:border-gray-300 transition-colors group">
@@ -548,7 +544,7 @@ export const BudgetEditor: React.FC<BudgetEditorProps> = ({ year, month }) => {
                     {subcats.map(sub => {
                       const subKey = `expense-${cat.id}-${sub.id}`
                       const subMode = budgetModes[subKey] || 'unique'
-                      const subInstallmentCount = installmentCounts[subKey] || 2
+                      const subInstallmentCount = installmentCounts[subKey] || DEFAULT_INSTALLMENT_COUNT
 
                       return (
                         <div key={sub.id} className="flex items-center gap-2 group/sub">

@@ -39,3 +39,28 @@ export const isDateInMonth = (dateString: string, year: number, month: number): 
   const date = new Date(dateString)
   return date.getFullYear() === year && date.getMonth() + 1 === month
 }
+
+/**
+ * Converts a year and month to a linear month number for easy comparison
+ * Example: 2024, 3 -> 24291 (2024 * 12 + 3)
+ *
+ * @param year - The year number
+ * @param month - The month number (1-12)
+ * @returns A linear month number that can be easily compared
+ */
+export const dateToMonthNumber = (year: number, month: number): number => {
+  return year * 12 + month
+}
+
+/**
+ * Converts a linear month number back to year and month
+ * Example: 24291 -> { year: 2024, month: 3 }
+ *
+ * @param monthNum - The linear month number
+ * @returns An object with year and month properties
+ */
+export const monthNumberToDate = (monthNum: number): { year: number; month: number } => {
+  const year = Math.floor(monthNum / 12)
+  const month = monthNum % 12
+  return { year, month: month === 0 ? 12 : month }
+}

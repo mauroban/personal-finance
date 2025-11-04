@@ -11,3 +11,5 @@ export const BUDGET_MODE_LABELS: Record<BudgetMode, string> = {
   [BUDGET_MODES.RECURRING]: 'Recorrente',
   [BUDGET_MODES.INSTALLMENT]: 'Parcelado',
 }
+
+export const DEFAULT_INSTALLMENT_COUNT = 2

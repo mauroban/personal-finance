@@ -1,11 +1,25 @@
 import { db } from '@/db'
 import { DEFAULT_CATEGORY_STRUCTURE, DEFAULT_SOURCES } from './defaultData'
+import { STORAGE_KEYS } from '@/constants/storage'
 
-const INIT_FLAG_KEY = 'budget-tracker-initialized'
-
+/**
+ * Initializes the database with default Brazilian categories and income sources
+ *
+ * This function:
+ * - Checks if the database is already initialized (via localStorage flag)
+ * - Checks if data already exists in the database
+ * - If neither condition is true, adds default categories (with parent-child relationships) and sources
+ * - Sets the initialization flag in localStorage
+ *
+ * This ensures the function is idempotent and won't duplicate data on subsequent calls.
+ *
+ * @throws Error if database operations fail (caught and logged internally)
+ * @example
+ * await initializeDefaultData()
+ */
 export const initializeDefaultData = async (): Promise<void> => {
   // Check if already initialized
-  const isInitialized = localStorage.getItem(INIT_FLAG_KEY)
+  const isInitialized = localStorage.getItem(STORAGE_KEYS.INIT_FLAG)
   if (isInitialized) {
     return
   }
@@ -17,7 +31,7 @@ export const initializeDefaultData = async (): Promise<void> => {
 
     if (existingCategories > 0 || existingSources > 0) {
       // Data exists, mark as initialized
-      localStorage.setItem(INIT_FLAG_KEY, 'true')
+      localStorage.setItem(STORAGE_KEYS.INIT_FLAG, 'true')
       return
     }
 
@@ -51,7 +65,7 @@ export const initializeDefaultData = async (): Promise<void> => {
     console.log('✅ Added default income sources')
 
     // Mark as initialized
-    localStorage.setItem(INIT_FLAG_KEY, 'true')
+    localStorage.setItem(STORAGE_KEYS.INIT_FLAG, 'true')
     console.log('✅ Default data initialization complete!')
   } catch (error) {
     console.error('❌ Failed to initialize default data:', error)

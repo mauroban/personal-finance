@@ -1,4 +1,4 @@
-import { Category, Source } from '@/types'
+import { Source } from '@/types'
 
 // Define categories in a structured way
 export const DEFAULT_CATEGORY_STRUCTURE = [

@@ -1,7 +1,18 @@
 import { db } from '@/db'
+import { STORAGE_KEYS } from '@/constants/storage'
 
-const INIT_FLAG_KEY = 'budget-tracker-initialized'
-
+/**
+ * Resets the database by clearing all tables and reinitializing with default data
+ *
+ * This function:
+ * 1. Clears all database tables (transactions, budgets, categories, sources)
+ * 2. Removes the initialization flag from localStorage
+ * 3. Reinitializes the database with default categories and sources
+ *
+ * @throws Error if database operations fail
+ * @example
+ * await resetDatabase()
+ */
 export const resetDatabase = async (): Promise<void> => {
   try {
     console.log('🗑️  Clearing all data...')
@@ -13,7 +24,7 @@ export const resetDatabase = async (): Promise<void> => {
     await db.sources.clear()
 
     // Clear initialization flag
-    localStorage.removeItem(INIT_FLAG_KEY)
+    localStorage.removeItem(STORAGE_KEYS.INIT_FLAG)
 
     console.log('✅ Database cleared successfully!')
 
