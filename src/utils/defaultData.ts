@@ -4,39 +4,39 @@ import { Source } from '@/types'
 export const DEFAULT_CATEGORY_STRUCTURE = [
   {
     name: 'Moradia',
-    subcategories: ['Aluguel', 'Condomínio', 'IPTU', 'Energia', 'Água', 'Gás', 'Internet/TV', 'Manutenção']
+    subcategories: ['Aluguel', 'Condomínio', 'IPTU', 'Energia', 'Água', 'Gás', 'Internet/TV', 'Manutenção', 'Móveis e decoração']
   },
   {
     name: 'Transporte',
-    subcategories: ['Combustível', 'Manutenção do veículo', 'Estacionamento', 'Transporte público', 'Pedágios', 'IPVA/Seguro']
+    subcategories: ['Combustível', 'Manutenção do veículo', 'Estacionamento', 'Transporte público', 'Pedágios', 'IPVA', 'Seguro do veículo', 'Aplicativo de transporte']
   },
   {
     name: 'Alimentação',
-    subcategories: ['Supermercado', 'Restaurantes', 'Delivery', 'Lanche']
+    subcategories: ['Supermercado', 'Restaurantes', 'Delivery', 'Lanche', 'Feira']
   },
   {
     name: 'Saúde',
-    subcategories: ['Plano de saúde', 'Medicamentos', 'Consultas médicas', 'Academia']
+    subcategories: ['Plano de saúde', 'Medicamentos', 'Consultas médicas', 'Exames laboratoriais', 'Academia', 'Equipamentos', 'Farmácia']
   },
   {
     name: 'Educação',
-    subcategories: ['Mensalidade escolar', 'Cursos', 'Livros e materiais', 'Idiomas']
+    subcategories: ['Mensalidade escolar', 'Cursos', 'Livros e materiais', 'Idiomas', 'Material escolar']
   },
   {
     name: 'Lazer',
-    subcategories: ['Streaming', 'Cinema/Shows', 'Viagens', 'Hobbies']
+    subcategories: ['Streaming', 'Cinema/Shows', 'Viagens', 'Hobbies', 'Festas', 'Jogos', 'Esportes']
   },
   {
     name: 'Vestuário',
-    subcategories: ['Roupas', 'Calçados', 'Acessórios']
+    subcategories: ['Roupas', 'Calçados', 'Acessórios', 'Roupas infantis']
   },
   {
     name: 'Despesas Pessoais',
-    subcategories: ['Cabeleireiro/Barbeiro', 'Produtos de higiene', 'Cosméticos']
+    subcategories: ['Cabeleireiro/Barbeiro', 'Produtos de higiene', 'Cosméticos', 'Supérfluos', 'Celular', 'Pet']
   },
   {
     name: 'Outros',
-    subcategories: ['Presentes', 'Doações', 'Imprevistos']
+    subcategories: ['Presentes', 'Doações', 'Imprevistos', 'Taxas bancárias', 'Seguros diversos']
   }
 ]
 

@@ -2,6 +2,7 @@ import React, { createContext, useContext, useState, useEffect, ReactNode } from
 import { Category, Source, Transaction, Budget } from '@/types'
 import { db } from '@/db'
 import { getCurrentYear, getCurrentMonth } from '@/utils/date'
+import { VIEW_MODES, ViewMode } from '@/constants/viewModes'
 
 interface AppContextType {
   categories: Category[]
@@ -10,8 +11,10 @@ interface AppContextType {
   budgets: Budget[]
   selectedYear: number
   selectedMonth: number
+  viewMode: ViewMode
   setSelectedYear: (year: number) => void
   setSelectedMonth: (month: number) => void
+  setViewMode: (mode: ViewMode) => void
   refreshCategories: () => Promise<void>
   refreshSources: () => Promise<void>
   refreshTransactions: () => Promise<void>
@@ -39,6 +42,15 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   const [budgets, setBudgets] = useState<Budget[]>([])
   const [selectedYear, setSelectedYear] = useState(getCurrentYear())
   const [selectedMonth, setSelectedMonth] = useState(getCurrentMonth())
+  const [viewMode, setViewModeState] = useState<ViewMode>(() => {
+    const stored = localStorage.getItem('viewMode')
+    return (stored as ViewMode) || VIEW_MODES.MONTHLY
+  })
+
+  const setViewMode = (mode: ViewMode) => {
+    setViewModeState(mode)
+    localStorage.setItem('viewMode', mode)
+  }
 
   const refreshCategories = async () => {
     const data = await db.categories.toArray()
@@ -144,8 +156,10 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         budgets,
         selectedYear,
         selectedMonth,
+        viewMode,
         setSelectedYear,
         setSelectedMonth,
+        setViewMode,
         refreshCategories,
         refreshSources,
         refreshTransactions,

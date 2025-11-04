@@ -33,6 +33,18 @@ npm run preview
 npm test
 ```
 
+## ✨ Key Feature: Yearly Planning
+
+This app now includes comprehensive **yearly view capabilities** for both Dashboard and Budget pages:
+
+- **Toggle between Monthly and Yearly views** using the "Mensal/Anual" buttons
+- **Yearly Budget Overview**: See all 12 months in a grid, with instant visibility of which months have budgets
+- **Annual Dashboard Analytics**: Get a complete picture of your financial year with variance analysis
+- **Click-to-drill-down**: Click any month in yearly view to instantly switch to that month's detail
+- **Persistent preferences**: Your view choice is saved in localStorage
+
+This makes annual financial planning intuitive and gives you the big picture while maintaining easy access to monthly details.
+
 ## 📖 How to Use
 
 ### 1. First-Time Setup
@@ -44,9 +56,11 @@ When you first open the app, go to **Configuração** (Setup) to:
 
 **Tip**: Use the Brazilian default categories listed in `docs/product-context.md` for guidance.
 
-### 2. Set Your Monthly Budget
+### 2. Set Your Budget
 
 Navigate to **Orçamento** (Budget):
+
+#### Monthly View
 
 1. Select the year and month
 2. **Income Sources**:
@@ -60,6 +74,16 @@ Navigate to **Orçamento** (Budget):
 4. The app automatically calculates your expected balance
 
 **Recurrent Budgets**: Mark regular monthly expenses (rent, subscriptions, etc.) as recurrent to automatically copy them to future months.
+
+#### Yearly View
+
+Click **Anual** to switch to yearly planning mode:
+
+1. **12-Month Grid Overview**: See all months at a glance with income, expenses, and balance
+2. **Category Breakdown Table**: View yearly budget totals for each expense category
+3. **Click any month** to drill down and edit that month's budget in detail
+4. **Annual Totals**: See projected income, expenses, and savings for the entire year
+5. Use this view for annual planning and to identify months that need budget setup
 
 ### 3. Log Transactions
 
@@ -79,13 +103,42 @@ Go to **Transações** (Transactions):
 
 ### 4. Review Your Dashboard
 
-The **Dashboard** is your main view:
+The **Dashboard** provides comprehensive financial insights:
+
+#### Monthly View
 
 - See your actual income vs. forecasted income
 - Track expenses against your budget
 - View your net balance (savings or deficit)
 - See category-by-category breakdowns with progress bars
 - Green indicators mean you're within budget, red means over budget
+
+#### Yearly View
+
+Click **Anual** to access yearly analytics:
+
+1. **Annual Summary Card**:
+   - Total income, expenses, and balance for the year
+   - Planned vs actual comparison with variance analysis
+   - Savings rate percentage
+   - Key insights (best/worst months, monthly averages)
+
+2. **Monthly Breakdown Table**:
+   - All 12 months with planned vs actual for income and expenses
+   - Variance calculations showing over/under performance
+   - Click any month to drill down to monthly detail view
+
+3. **Category Trends Analysis**:
+   - Yearly performance for each expense category
+   - Expandable sections showing month-by-month details
+   - Visual progress bars and budget execution percentages
+   - Identify categories that are over or under budget
+
+This yearly view is essential for:
+- Annual financial planning and goal setting
+- Identifying spending patterns and trends
+- Comparing performance across months
+- Understanding seasonal variations in income/expenses
 
 ### 5. Backup & Restore
 
@@ -147,11 +200,17 @@ See `docs/technical-context.md` for detailed testing guidelines.
 ✅ **Custom expense categories** with unlimited subcategories
 ✅ **Multiple income sources** tracking
 ✅ **Monthly budget planning** with subcategory support
+✅ **Yearly budget overview** - 12-month grid with drill-down capability
+✅ **Annual analytics** - Comprehensive yearly financial insights
+✅ **Variance analysis** - Track planned vs actual for income and expenses
+✅ **Category trends** - Yearly performance analysis by expense category
 ✅ **Recurrent budgets** - Mark monthly expenses to auto-copy
 ✅ **Transaction logging** with installment support
 ✅ **Collapsible category view** - Organize budgets by category and subcategory
 ✅ **Real-time budget vs. actual comparison**
 ✅ **Visual progress indicators** with color coding
+✅ **Drill-down navigation** - Click months in yearly view to edit details
+✅ **View mode persistence** - Your monthly/yearly preference is remembered
 ✅ **Export/Import backup system** (.json format)
 ✅ **Brazilian Real (BRL)** currency format
 ✅ **Portuguese UI** throughout

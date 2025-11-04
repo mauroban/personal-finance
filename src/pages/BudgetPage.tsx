@@ -1,62 +1,100 @@
 import React, { useEffect } from 'react'
 import { PageContainer } from '@/components/layout/PageContainer'
 import { BudgetEditor } from '@/components/budget/BudgetEditor'
+import { YearlyBudgetOverview } from '@/components/budget/YearlyBudgetOverview'
+import { PeriodSelector } from '@/components/common/PeriodSelector'
 import { useApp } from '@/context/AppContext'
-import { getMonthName } from '@/utils/date'
-import { Select } from '@/components/common/Input'
 import { copyRecurrentBudgets } from '@/utils/copyRecurrentBudgets'
+import { VIEW_MODES } from '@/constants/viewModes'
 
 export const BudgetPage: React.FC = () => {
-  const { selectedYear, selectedMonth, setSelectedYear, setSelectedMonth, refreshBudgets } = useApp()
+  const {
+    categories,
+    sources,
+    budgets,
+    selectedYear,
+    selectedMonth,
+    viewMode,
+    setSelectedYear,
+    setSelectedMonth,
+    setViewMode,
+    refreshBudgets,
+  } = useApp()
 
-  const years = Array.from({ length: 5 }, (_, i) => new Date().getFullYear() - 2 + i)
-  const months = Array.from({ length: 12 }, (_, i) => i + 1)
+  const handleMonthDrillDown = (month: number) => {
+    setSelectedMonth(month)
+    setViewMode(VIEW_MODES.MONTHLY)
+  }
 
-  // Copy recurrent budgets when month changes
+  // Copy recurrent budgets when month changes (only in monthly mode)
   useEffect(() => {
-    const handleRecurrentCopy = async () => {
-      await copyRecurrentBudgets(selectedYear, selectedMonth)
-      await refreshBudgets()
+    if (viewMode === VIEW_MODES.MONTHLY) {
+      const handleRecurrentCopy = async () => {
+        await copyRecurrentBudgets(selectedYear, selectedMonth)
+        await refreshBudgets()
+      }
+      handleRecurrentCopy()
     }
-    handleRecurrentCopy()
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedYear, selectedMonth])
+  }, [selectedYear, selectedMonth, viewMode])
+
+  const viewModeToggle = (
+    <div className="flex gap-2">
+      <button
+        onClick={() => setViewMode(VIEW_MODES.MONTHLY)}
+        className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+          viewMode === VIEW_MODES.MONTHLY
+            ? 'bg-blue-600 text-white'
+            : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600'
+        }`}
+      >
+        Mensal
+      </button>
+      <button
+        onClick={() => setViewMode(VIEW_MODES.YEARLY)}
+        className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+          viewMode === VIEW_MODES.YEARLY
+            ? 'bg-blue-600 text-white'
+            : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600'
+        }`}
+      >
+        Anual
+      </button>
+    </div>
+  )
 
   return (
     <PageContainer
-      title="Orçamento Mensal"
-      description="Defina suas receitas previstas e despesas planejadas para o mês"
+      title="Orçamento"
+      description={
+        viewMode === VIEW_MODES.MONTHLY
+          ? 'Defina suas receitas previstas e despesas planejadas para o mês'
+          : 'Visão geral do orçamento anual e planejamento mensal'
+      }
+      action={viewModeToggle}
     >
       <div className="space-y-6">
         <div className="bg-white rounded-xl shadow-sm p-6">
-          <div className="flex gap-4 items-end">
-            <Select
-              label="Ano"
-              value={selectedYear}
-              onChange={e => setSelectedYear(parseInt(e.target.value))}
-            >
-              {years.map(year => (
-                <option key={year} value={year}>
-                  {year}
-                </option>
-              ))}
-            </Select>
-
-            <Select
-              label="Mês"
-              value={selectedMonth}
-              onChange={e => setSelectedMonth(parseInt(e.target.value))}
-            >
-              {months.map(month => (
-                <option key={month} value={month}>
-                  {getMonthName(month)}
-                </option>
-              ))}
-            </Select>
-          </div>
+          <PeriodSelector
+            selectedYear={selectedYear}
+            selectedMonth={selectedMonth}
+            onYearChange={setSelectedYear}
+            onMonthChange={setSelectedMonth}
+            showMonths={viewMode === VIEW_MODES.MONTHLY}
+          />
         </div>
 
-        <BudgetEditor year={selectedYear} month={selectedMonth} />
+        {viewMode === VIEW_MODES.MONTHLY ? (
+          <BudgetEditor year={selectedYear} month={selectedMonth} />
+        ) : (
+          <YearlyBudgetOverview
+            budgets={budgets}
+            categories={categories}
+            sources={sources}
+            year={selectedYear}
+            onMonthClick={handleMonthDrillDown}
+          />
+        )}
       </div>
     </PageContainer>
   )
