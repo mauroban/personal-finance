@@ -69,7 +69,7 @@ export const TransactionList: React.FC = () => {
             {sortedTransactions.map(transaction => (
               <tr key={transaction.id} className="hover:bg-gray-50">
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                  {new Date(transaction.date).toLocaleDateString('pt-BR')}
+                  {parseDate(transaction.date).toLocaleDateString('pt-BR')}
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">
                   <span

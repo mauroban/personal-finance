@@ -1,3 +1,8 @@
+/**
+ * Date utilities that treat dates as timezone-agnostic calendar dates.
+ * All dates are set to noon (12:00:00) to prevent timezone conversions from shifting the calendar day.
+ */
+
 export const formatDate = (date: Date): string => {
   const year = date.getFullYear()
   const month = String(date.getMonth() + 1).padStart(2, '0')
@@ -12,11 +17,17 @@ export const getTodayString = (): string => {
 export const addMonths = (date: Date, months: number): Date => {
   const newDate = new Date(date)
   newDate.setMonth(newDate.getMonth() + months)
+  // Ensure time is set to noon to avoid timezone issues
+  newDate.setHours(12, 0, 0, 0)
   return newDate
 }
 
 export const parseDate = (dateString: string): Date => {
-  return new Date(dateString)
+  // Parse as local date with time set to noon to completely avoid timezone issues
+  // Setting time to 12:00:00 ensures the date never shifts to a different day
+  // dateString format: "YYYY-MM-DD"
+  const [year, month, day] = dateString.split('-').map(Number)
+  return new Date(year, month - 1, day, 12, 0, 0, 0)
 }
 
 export const getMonthName = (month: number): string => {
@@ -36,8 +47,9 @@ export const getCurrentMonth = (): number => {
 }
 
 export const isDateInMonth = (dateString: string, year: number, month: number): boolean => {
-  const date = new Date(dateString)
-  return date.getFullYear() === year && date.getMonth() + 1 === month
+  // Parse date string manually to avoid timezone issues
+  const [dateYear, dateMonth] = dateString.split('-').map(Number)
+  return dateYear === year && dateMonth === month
 }
 
 /**

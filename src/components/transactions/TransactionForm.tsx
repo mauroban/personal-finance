@@ -3,7 +3,7 @@ import { useApp } from '@/context/AppContext'
 import { Button } from '@/components/common/Button'
 import { Input, Select, TextArea } from '@/components/common/Input'
 import { Modal } from '@/components/common/Modal'
-import { getTodayString, addMonths, formatDate } from '@/utils/date'
+import { getTodayString, addMonths, formatDate, parseDate } from '@/utils/date'
 
 interface TransactionFormProps {
   isOpen: boolean
@@ -69,7 +69,7 @@ export const TransactionForm: React.FC<TransactionFormProps> = ({ isOpen, onClos
     if (transactionMode === 'installment') {
       // Create multiple transactions for installments (divide value)
       const installmentValue = numValue / numCount
-      const baseDate = new Date(date)
+      const baseDate = parseDate(date)
 
       for (let i = 0; i < numCount; i++) {
         const installmentDate = addMonths(baseDate, i)
@@ -241,6 +241,7 @@ export const TransactionForm: React.FC<TransactionFormProps> = ({ isOpen, onClos
               <option value="Dinheiro">Dinheiro</option>
               <option value="PIX">PIX</option>
               <option value="Transferência">Transferência</option>
+              <option value="Boleto">Boleto</option>
             </Select>
           </>
         )}
