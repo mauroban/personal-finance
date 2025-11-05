@@ -66,7 +66,9 @@ export const MonthlyBreakdownTable: React.FC<MonthlyBreakdownTableProps> = ({
               <tr
                 key={breakdown.month}
                 onClick={() => onMonthClick(breakdown.month)}
-                className="hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer transition-colors"
+                className={`hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer transition-colors ${
+                  breakdown.isFuture ? 'opacity-40' : ''
+                }`}
               >
                 <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white">
                   {breakdown.monthName}
@@ -75,36 +77,40 @@ export const MonthlyBreakdownTable: React.FC<MonthlyBreakdownTableProps> = ({
                   {formatCurrency(breakdown.budgetedIncome)}
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-right font-medium text-green-600 dark:text-green-400">
-                  {formatCurrency(breakdown.income)}
+                  {breakdown.isFuture ? '-' : formatCurrency(breakdown.income)}
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-right text-gray-500 dark:text-gray-400">
                   {formatCurrency(breakdown.budgetedExpense)}
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-right font-medium text-red-600 dark:text-red-400">
-                  {formatCurrency(breakdown.expense)}
+                  {breakdown.isFuture ? '-' : formatCurrency(breakdown.expense)}
                 </td>
                 <td className={`px-6 py-4 whitespace-nowrap text-sm text-right font-semibold ${
-                  breakdown.netBalance >= 0
+                  breakdown.isFuture
+                    ? 'text-gray-400 dark:text-gray-500'
+                    : breakdown.netBalance >= 0
                     ? 'text-blue-600 dark:text-blue-400'
                     : 'text-red-600 dark:text-red-400'
                 }`}>
-                  {formatCurrency(breakdown.netBalance)}
+                  {breakdown.isFuture ? '-' : formatCurrency(breakdown.netBalance)}
                 </td>
                 <td className={`px-6 py-4 whitespace-nowrap text-sm text-right ${
-                  breakdown.incomeVariance >= 0
+                  breakdown.isFuture
+                    ? 'text-gray-400 dark:text-gray-500'
+                    : breakdown.incomeVariance >= 0
                     ? 'text-green-600 dark:text-green-400'
                     : 'text-red-600 dark:text-red-400'
                 }`}>
-                  {breakdown.incomeVariance >= 0 ? '+' : ''}
-                  {formatCurrency(breakdown.incomeVariance)}
+                  {breakdown.isFuture ? '-' : `${breakdown.incomeVariance >= 0 ? '+' : ''}${formatCurrency(breakdown.incomeVariance)}`}
                 </td>
                 <td className={`px-6 py-4 whitespace-nowrap text-sm text-right ${
-                  breakdown.expenseVariance >= 0
+                  breakdown.isFuture
+                    ? 'text-gray-400 dark:text-gray-500'
+                    : breakdown.expenseVariance >= 0
                     ? 'text-green-600 dark:text-green-400'
                     : 'text-red-600 dark:text-red-400'
                 }`}>
-                  {breakdown.expenseVariance >= 0 ? '+' : ''}
-                  {formatCurrency(breakdown.expenseVariance)}
+                  {breakdown.isFuture ? '-' : `${breakdown.expenseVariance >= 0 ? '+' : ''}${formatCurrency(breakdown.expenseVariance)}`}
                 </td>
               </tr>
             ))}

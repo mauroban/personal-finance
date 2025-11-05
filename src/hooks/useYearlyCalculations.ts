@@ -12,6 +12,7 @@ export interface MonthlyBreakdown {
   netBalance: number
   incomeVariance: number
   expenseVariance: number
+  isFuture: boolean // Indicates if this month hasn't happened yet
 }
 
 export interface YearlySummary {
@@ -52,14 +53,23 @@ export const useYearlyCalculations = (
     let totalBudgetedIncome = 0
     let totalBudgetedExpense = 0
 
+    // Determine current date for future month detection
+    const now = new Date()
+    const currentYear = now.getFullYear()
+    const currentMonth = now.getMonth() + 1 // getMonth() is 0-indexed
+
     for (let month = 1; month <= 12; month++) {
+      // Check if this month is in the future
+      const isFuture = year > currentYear || (year === currentYear && month > currentMonth)
+
       const monthTransactions = transactions.filter(t => isDateInMonth(t.date, year, month))
 
-      const income = monthTransactions
+      // Only calculate actual values for past/current months
+      const income = isFuture ? 0 : monthTransactions
         .filter(t => t.type === 'earning')
         .reduce((sum, t) => sum + t.value, 0)
 
-      const expense = monthTransactions
+      const expense = isFuture ? 0 : monthTransactions
         .filter(t => t.type === 'expense')
         .reduce((sum, t) => sum + t.value, 0)
 
@@ -71,8 +81,11 @@ export const useYearlyCalculations = (
         .filter(b => b.year === year && b.month === month && b.type === 'expense')
         .reduce((sum, b) => sum + b.amount, 0)
 
-      totalIncome += income
-      totalExpense += expense
+      // Only add to totals if not a future month
+      if (!isFuture) {
+        totalIncome += income
+        totalExpense += expense
+      }
       totalBudgetedIncome += budgetedIncome
       totalBudgetedExpense += budgetedExpense
 
@@ -84,8 +97,9 @@ export const useYearlyCalculations = (
         budgetedIncome,
         budgetedExpense,
         netBalance: income - expense,
-        incomeVariance: income - budgetedIncome,
-        expenseVariance: budgetedExpense - expense,
+        incomeVariance: isFuture ? 0 : income - budgetedIncome,
+        expenseVariance: isFuture ? 0 : budgetedExpense - expense,
+        isFuture,
       })
     }
 
@@ -105,6 +119,11 @@ export const useYearlyCalculations = (
     const parentCategories = categories.filter(c => !c.parentId)
 
     return parentCategories.map(cat => {
+      // Get all child category IDs for this parent category
+      const childCategoryIds = categories
+        .filter(c => c.parentId === cat.id)
+        .map(c => c.id!)
+
       let totalBudgeted = 0
       let totalActual = 0
       const monthlyData: { month: number; budgeted: number; actual: number }[] = []
@@ -114,13 +133,22 @@ export const useYearlyCalculations = (
           isDateInMonth(t.date, year, month) && t.type === 'expense'
         )
 
-        const groupBudget = budgets.find(
-          b => b.year === year && b.month === month && b.groupId === cat.id && b.type === 'expense'
-        )
+        // Consolidate budgets: sum budgets at parent level AND subcategory level
+        const budgeted = budgets
+          .filter(b =>
+            b.year === year &&
+            b.month === month &&
+            b.type === 'expense' &&
+            (b.groupId === cat.id || (b.subgroupId && childCategoryIds.includes(b.subgroupId)))
+          )
+          .reduce((sum, b) => sum + b.amount, 0)
 
-        const budgeted = groupBudget?.amount || 0
+        // Consolidate actuals: sum transactions at parent level AND subcategory level
         const actual = monthTransactions
-          .filter(t => t.groupId === cat.id)
+          .filter(t =>
+            t.groupId === cat.id ||
+            (t.subgroupId && childCategoryIds.includes(t.subgroupId))
+          )
           .reduce((sum, t) => sum + t.value, 0)
 
         totalBudgeted += budgeted

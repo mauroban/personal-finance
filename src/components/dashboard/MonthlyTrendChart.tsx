@@ -30,14 +30,17 @@ export const MonthlyTrendChart: React.FC<MonthlyTrendChartProps> = ({
 }) => {
   const { yearlySummary } = useYearlyCalculations(transactions, budgets, categories, year)
 
-  const chartData = yearlySummary.monthlyBreakdowns.map(breakdown => ({
-    month: breakdown.monthName.substring(0, 3),
-    'Receita Planejada': breakdown.budgetedIncome,
-    'Receita Real': breakdown.income,
-    'Despesa Planejada': breakdown.budgetedExpense,
-    'Despesa Real': breakdown.expense,
-    'Saldo': breakdown.netBalance,
-  }))
+  // Filter out future months from charts
+  const chartData = yearlySummary.monthlyBreakdowns
+    .filter(breakdown => !breakdown.isFuture)
+    .map(breakdown => ({
+      month: breakdown.monthName.substring(0, 3),
+      'Receita Planejada': breakdown.budgetedIncome,
+      'Receita Real': breakdown.income,
+      'Despesa Planejada': breakdown.budgetedExpense,
+      'Despesa Real': breakdown.expense,
+      'Saldo': breakdown.netBalance,
+    }))
 
   const CustomTooltip = ({ active, payload }: any) => {
     if (active && payload && payload.length) {

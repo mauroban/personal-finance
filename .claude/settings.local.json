@@ -5,7 +5,11 @@
       "Bash(npm test:*)",
       "Bash(npm run build:*)",
       "Bash(npm run dev:*)",
-      "Bash(npm install:*)"
+      "Bash(npm install:*)",
+      "Bash(npx tsc:*)",
+      "Bash(\"C:\\Users\\mauro\\Desktop\\personal-finance\\src\\components\\dashboard\\PerformanceHeatmap.tsx\")",
+      "Bash(\"C:\\Users\\mauro\\Desktop\\personal-finance\\src\\components\\common\\LoadingState.tsx\")",
+      "Bash(\"C:\\Users\\mauro\\Desktop\\personal-finance\\src\\components\\common\\EmptyState.tsx\")"
     ],
     "deny": [],
     "ask": []
