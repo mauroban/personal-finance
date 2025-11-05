@@ -1,6 +1,7 @@
 import { db } from '@/db'
 import { Budget } from '@/types'
 import { dateToMonthNumber, getCurrentYear } from './date'
+import { logger } from './logger'
 
 /**
  * Propagates a recurring budget to all future months
@@ -66,7 +67,10 @@ export const propagateRecurrentBudget = async (budget: Budget): Promise<number> 
   }
 
   if (copiedCount > 0) {
-    console.log(`✅ Propagated recurring budget to ${copiedCount} future months`)
+    logger.info(`Propagated recurring budget to ${copiedCount} future months`, {
+      budgetId: budget.id,
+      copiedCount,
+    })
   }
 
   return copiedCount
@@ -131,7 +135,11 @@ export const propagateInstallmentBudget = async (budget: Budget): Promise<number
   }
 
   if (copiedCount > 0) {
-    console.log(`✅ Propagated installment budget to ${copiedCount} months (${installments} total)`)
+    logger.info(`Propagated installment budget to ${copiedCount} months`, {
+      budgetId: budget.id,
+      copiedCount,
+      totalInstallments: installments,
+    })
   }
 
   return copiedCount

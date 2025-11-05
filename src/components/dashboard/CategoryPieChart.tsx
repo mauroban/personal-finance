@@ -1,22 +1,34 @@
 import React from 'react'
 import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from 'recharts'
 import { formatCurrency } from '@/utils/format'
+import { TooltipProps } from '@/types/recharts'
 
 interface CategoryPieChartProps {
   data: { name: string; value: number; color: string }[]
   title: string
 }
 
+interface ChartDataWithTotal {
+  name: string
+  value: number
+  color: string
+  total: number
+}
+
 const RADIAN = Math.PI / 180
 
-const renderCustomizedLabel = ({
-  cx,
-  cy,
-  midAngle,
-  innerRadius,
-  outerRadius,
-  percent,
-}: any) => {
+/**
+ * Custom label renderer for pie chart
+ * Using Record for props to maintain compatibility with Recharts' PieLabel type
+ */
+const renderCustomizedLabel = (props: Record<string, unknown>) => {
+  const cx = props.cx as number
+  const cy = props.cy as number
+  const midAngle = props.midAngle as number
+  const innerRadius = props.innerRadius as number
+  const outerRadius = props.outerRadius as number
+  const percent = props.percent as number
+
   const radius = innerRadius + (outerRadius - innerRadius) * 0.5
   const x = cx + radius * Math.cos(-midAngle * RADIAN)
   const y = cy + radius * Math.sin(-midAngle * RADIAN)
@@ -38,17 +50,17 @@ const renderCustomizedLabel = ({
 }
 
 export const CategoryPieChart: React.FC<CategoryPieChartProps> = ({ data, title }) => {
-  const CustomTooltip = ({ active, payload }: any) => {
+  const CustomTooltip = ({ active, payload }: TooltipProps<ChartDataWithTotal>) => {
     if (active && payload && payload.length) {
-      const data = payload[0]
+      const dataPoint = payload[0]
       return (
         <div className="bg-white dark:bg-gray-800 p-3 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700">
-          <p className="font-semibold text-gray-900 dark:text-white">{data.name}</p>
+          <p className="font-semibold text-gray-900 dark:text-white">{dataPoint.name}</p>
           <p className="text-sm text-gray-600 dark:text-gray-400">
-            {formatCurrency(data.value)}
+            {formatCurrency(dataPoint.value)}
           </p>
           <p className="text-sm text-gray-600 dark:text-gray-400">
-            {((data.value / data.payload.total) * 100).toFixed(1)}%
+            {((dataPoint.value / dataPoint.payload.total) * 100).toFixed(1)}%
           </p>
         </div>
       )
@@ -86,11 +98,16 @@ export const CategoryPieChart: React.FC<CategoryPieChartProps> = ({ data, title 
             <Legend
               verticalAlign="bottom"
               height={36}
-              formatter={(value, entry: any) => (
-                <span className="text-sm text-gray-700 dark:text-gray-300">
-                  {value}: {formatCurrency(entry.payload.value)}
-                </span>
-              )}
+              formatter={(value, entry) => {
+                const payload = (entry as unknown as Record<string, unknown>).payload as
+                  | ChartDataWithTotal
+                  | undefined
+                return (
+                  <span className="text-sm text-gray-700 dark:text-gray-300">
+                    {value}: {formatCurrency(payload?.value || 0)}
+                  </span>
+                )
+              }}
             />
           </PieChart>
         </ResponsiveContainer>

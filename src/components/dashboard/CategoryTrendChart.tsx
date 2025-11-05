@@ -11,6 +11,7 @@ import {
 } from 'recharts'
 import { CategoryTrend } from '@/hooks/useTrendCalculations'
 import { formatCurrency } from '@/utils/format'
+import { TooltipProps, ChartDataPoint } from '@/types/recharts'
 
 interface CategoryTrendChartProps {
   categoryTrends: CategoryTrend[]
@@ -48,8 +49,8 @@ export const CategoryTrendChart: React.FC<CategoryTrendChartProps> = ({
   const months = categoryTrends[0].data.map((d) => `${d.monthName.substring(0, 3)}/${d.year}`)
 
   // Create chart data structure
-  const chartData = categoryTrends[0].data.map((_, index) => {
-    const dataPoint: any = {
+  const chartData: ChartDataPoint[] = categoryTrends[0].data.map((_, index) => {
+    const dataPoint: ChartDataPoint = {
       month: months[index],
     }
 
@@ -60,7 +61,7 @@ export const CategoryTrendChart: React.FC<CategoryTrendChartProps> = ({
     return dataPoint
   })
 
-  const CustomTooltip = ({ active, payload }: any) => {
+  const CustomTooltip = ({ active, payload }: TooltipProps<ChartDataPoint>) => {
     if (active && payload && payload.length) {
       return (
         <div className="bg-white dark:bg-gray-800 p-4 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700">
@@ -68,8 +69,8 @@ export const CategoryTrendChart: React.FC<CategoryTrendChartProps> = ({
             {payload[0].payload.month}
           </p>
           {payload
-            .sort((a: any, b: any) => b.value - a.value)
-            .map((entry: any, index: number) => (
+            .sort((a, b) => b.value - a.value)
+            .map((entry, index) => (
               <p key={index} className="text-sm" style={{ color: entry.color }}>
                 {entry.name}: {formatCurrency(entry.value)}
               </p>

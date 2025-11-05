@@ -3,15 +3,22 @@ import { Category, Source, Transaction, Budget } from '@/types'
 import { db } from '@/db'
 import { getCurrentYear, getCurrentMonth } from '@/utils/date'
 import { VIEW_MODES, ViewMode } from '@/constants/viewModes'
+import { logger } from '@/utils/logger'
 
 interface AppContextType {
+  // Data
   categories: Category[]
   sources: Source[]
   transactions: Transaction[]
   budgets: Budget[]
+
+  // UI State
+  isLoading: boolean
   selectedYear: number
   selectedMonth: number
   viewMode: ViewMode
+
+  // Actions
   setSelectedYear: (year: number) => void
   setSelectedMonth: (month: number) => void
   setViewMode: (mode: ViewMode) => void
@@ -36,6 +43,7 @@ interface AppContextType {
 const AppContext = createContext<AppContextType | undefined>(undefined)
 
 export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
+  const [isLoading, setIsLoading] = useState(true)
   const [categories, setCategories] = useState<Category[]>([])
   const [sources, setSources] = useState<Source[]>([])
   const [transactions, setTransactions] = useState<Transaction[]>([])
@@ -74,15 +82,27 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
 
   useEffect(() => {
     const initialize = async () => {
-      // Initialize default data on first load
-      const { initializeDefaultData } = await import('@/utils/initializeDefaults')
-      await initializeDefaultData()
+      try {
+        setIsLoading(true)
 
-      // Then load all data
-      await refreshCategories()
-      await refreshSources()
-      await refreshTransactions()
-      await refreshBudgets()
+        // Initialize default data on first load
+        const { initializeDefaultData } = await import('@/utils/initializeDefaults')
+        await initializeDefaultData()
+
+        // Then load all data
+        await Promise.all([
+          refreshCategories(),
+          refreshSources(),
+          refreshTransactions(),
+          refreshBudgets(),
+        ])
+
+        logger.info('Application data loaded successfully')
+      } catch (error) {
+        logger.error('Failed to initialize application data', { error })
+      } finally {
+        setIsLoading(false)
+      }
     }
     initialize()
   }, [])
@@ -196,7 +216,10 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         if (fb.id) await db.budgets.delete(fb.id)
       }
 
-      console.log(`🗑️ Deleted recurring/installment budget and ${futureBudgets.length - 1} future instances`)
+      logger.info('Deleted recurring/installment budget and future instances', {
+        budgetId: id,
+        futureInstancesCount: futureBudgets.length - 1,
+      })
     } else {
       await db.budgets.delete(id)
     }
@@ -207,13 +230,19 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   return (
     <AppContext.Provider
       value={{
+        // Data
         categories,
         sources,
         transactions,
         budgets,
+
+        // UI State
+        isLoading,
         selectedYear,
         selectedMonth,
         viewMode,
+
+        // Actions
         setSelectedYear,
         setSelectedMonth,
         setViewMode,

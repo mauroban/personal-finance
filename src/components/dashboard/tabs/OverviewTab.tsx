@@ -3,9 +3,10 @@ import { Transaction, Budget, Category } from '@/types'
 import { HeroCard } from '@/components/dashboard/HeroCard'
 import { MetricCard } from '@/components/dashboard/MetricCard'
 import { TrendSparkline } from '@/components/dashboard/TrendSparkline'
-import { AlertBanner } from '@/components/dashboard/AlertBanner'
+import { CategoryImpactAnalysis } from '@/components/dashboard/CategoryImpactAnalysis'
+import { SpendingInsights } from '@/components/dashboard/SpendingInsights'
 import { useYTDCalculations } from '@/hooks/useYTDCalculations'
-import { useAlerts } from '@/hooks/useAlerts'
+import { useCategoryImpact } from '@/hooks/useCategoryImpact'
 import { useBudgetCalculations } from '@/hooks/useBudgetCalculations'
 import { formatCurrency } from '@/utils/format'
 import { VIEW_MODES } from '@/constants/viewModes'
@@ -32,7 +33,7 @@ export const OverviewTab: React.FC<OverviewTabProps> = ({
   const ytdSummary = useYTDCalculations(transactions, budgets, year, month)
 
   // Get current month summary
-  const { monthSummary, groupSummaries } = useBudgetCalculations(
+  const { monthSummary, groupSummaries: _groupSummaries } = useBudgetCalculations(
     transactions,
     budgets,
     categories,
@@ -40,13 +41,17 @@ export const OverviewTab: React.FC<OverviewTabProps> = ({
     month
   )
 
-  // Get alerts
-  const alerts = useAlerts(transactions, budgets, categories, year, month)
+  // Get category impact analysis
+  const categoryImpact = useCategoryImpact(transactions, budgets, categories, year, month)
 
-  // Calculate last 3 months trend
+  // Calculate last 3 months trend (only months with activity)
   const last3MonthsBalance = React.useMemo(() => {
     const balances: number[] = []
-    for (let i = 2; i >= 0; i--) {
+    const today = new Date()
+    const currentYear = today.getFullYear()
+    const currentMonth = today.getMonth() + 1
+
+    for (let i = 1; i <= 10 && balances.length < 3; i++) {
       let targetMonth = month - i
       let targetYear = year
 
@@ -55,17 +60,29 @@ export const OverviewTab: React.FC<OverviewTabProps> = ({
         targetYear -= 1
       }
 
+      // Skip future months
+      if (targetYear > currentYear || (targetYear === currentYear && targetMonth >= currentMonth)) {
+        continue
+      }
+
       const monthTrans = transactions.filter(t => {
         const date = new Date(t.date)
         return date.getFullYear() === targetYear && date.getMonth() + 1 === targetMonth
       })
 
+      const monthBuds = budgets.filter(b => b.year === targetYear && b.month === targetMonth)
+
+      // Skip empty months
+      if (monthTrans.length === 0 && monthBuds.length === 0) {
+        continue
+      }
+
       const income = monthTrans.filter(t => t.type === 'earning').reduce((sum, t) => sum + t.value, 0)
       const expense = monthTrans.filter(t => t.type === 'expense').reduce((sum, t) => sum + t.value, 0)
-      balances.push(income - expense)
+      balances.unshift(income - expense) // Add to beginning to maintain chronological order
     }
     return balances
-  }, [transactions, year, month])
+  }, [transactions, budgets, year, month])
 
   // Determine trend
   const trend = React.useMemo(() => {
@@ -77,12 +94,75 @@ export const OverviewTab: React.FC<OverviewTabProps> = ({
     return 'neutral'
   }, [last3MonthsBalance])
 
-  // Top 5 spending categories
-  const topCategories = React.useMemo(() => {
-    return groupSummaries
-      .sort((a, b) => b.actual - a.actual)
-      .slice(0, 5)
-  }, [groupSummaries])
+  // Calculate spending insights
+  const spendingInsights = React.useMemo(() => {
+    const today = new Date()
+    const isCurrentMonth = today.getFullYear() === year && today.getMonth() + 1 === month
+    const daysInMonth = new Date(year, month, 0).getDate()
+    const daysElapsed = isCurrentMonth ? today.getDate() : daysInMonth
+
+    // Calculate 3-month average spending (excluding current month and empty months)
+    let avgMonthlySpending = 0
+    let monthsCount = 0
+    for (let i = 1; i <= 10 && monthsCount < 3; i++) { // Look back up to 10 months to find 3 with activity
+      let targetMonth = month - i
+      let targetYear = year
+
+      if (targetMonth <= 0) {
+        targetMonth += 12
+        targetYear -= 1
+      }
+
+      // Only include completed months
+      if (targetYear > today.getFullYear() ||
+          (targetYear === today.getFullYear() && targetMonth >= today.getMonth() + 1)) {
+        continue
+      }
+
+      const monthTransactions = transactions.filter(t => {
+        const date = new Date(t.date)
+        return date.getFullYear() === targetYear && date.getMonth() + 1 === targetMonth
+      })
+
+      const monthBudgets = budgets.filter(b => b.year === targetYear && b.month === targetMonth)
+
+      // Only include months that have expenses or budgets
+      const hasExpenses = monthTransactions.some(t => t.type === 'expense')
+      const hasBudgets = monthBudgets.some(b => b.type === 'expense')
+
+      if (!hasExpenses && !hasBudgets) {
+        continue
+      }
+
+      const monthSpent = monthTransactions
+        .filter(t => t.type === 'expense')
+        .reduce((sum, t) => sum + t.value, 0)
+
+      avgMonthlySpending += monthSpent
+      monthsCount++
+    }
+    avgMonthlySpending = monthsCount > 0 ? avgMonthlySpending / monthsCount : 0
+
+    // Project spending for rest of month based on current daily average
+    const dailyAverage = daysElapsed > 0 ? monthSummary.totalExpense / daysElapsed : 0
+    const projectedSpending = isCurrentMonth
+      ? (dailyAverage * daysInMonth)
+      : monthSummary.totalExpense
+
+    const isOnTrack = monthSummary.budgetedExpense > 0
+      ? projectedSpending <= monthSummary.budgetedExpense
+      : true
+
+    return {
+      totalSpent: monthSummary.totalExpense,
+      totalBudgeted: monthSummary.budgetedExpense,
+      avgMonthlySpending,
+      daysInMonth,
+      daysElapsed,
+      projectedSpending,
+      isOnTrack,
+    }
+  }, [transactions, monthSummary, year, month])
 
   return (
     <div className="space-y-6">
@@ -131,53 +211,16 @@ export const OverviewTab: React.FC<OverviewTabProps> = ({
 
       {/* Quick Insights Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Top Categories */}
-        <div className="card p-6">
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
-            Principais Categorias
-          </h3>
-          {topCategories.length > 0 ? (
-            <div className="space-y-3">
-              {topCategories.map((category) => {
-                const percentage = category.budgeted > 0
-                  ? (category.actual / category.budgeted) * 100
-                  : 0
-                const isOverBudget = percentage > 100
-
-                return (
-                  <div key={category.groupId} className="flex items-center justify-between">
-                    <div className="flex-1">
-                      <div className="flex items-center justify-between mb-1">
-                        <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                          {category.groupName}
-                        </span>
-                        <span className="text-sm font-bold text-gray-900 dark:text-white">
-                          {formatCurrency(category.actual)}
-                        </span>
-                      </div>
-                      {category.budgeted > 0 && (
-                        <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
-                          <div
-                            className={`h-2 rounded-full transition-all ${
-                              isOverBudget
-                                ? 'bg-red-500'
-                                : 'bg-blue-500'
-                            }`}
-                            style={{ width: `${Math.min(percentage, 100)}%` }}
-                          />
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                )
-              })}
-            </div>
-          ) : (
-            <p className="text-sm text-gray-500 dark:text-gray-400">
-              Nenhuma despesa registrada este mês
-            </p>
-          )}
-        </div>
+        {/* Spending Insights */}
+        <SpendingInsights
+          totalSpent={spendingInsights.totalSpent}
+          totalBudgeted={spendingInsights.totalBudgeted}
+          avgMonthlySpending={spendingInsights.avgMonthlySpending}
+          daysInMonth={spendingInsights.daysInMonth}
+          daysElapsed={spendingInsights.daysElapsed}
+          projectedSpending={spendingInsights.projectedSpending}
+          isOnTrack={spendingInsights.isOnTrack}
+        />
 
         {/* Recent Trend */}
         <div className="card p-6">
@@ -207,15 +250,14 @@ export const OverviewTab: React.FC<OverviewTabProps> = ({
         </div>
       </div>
 
-      {/* Alerts & Recommendations */}
-      {alerts.length > 0 && (
-        <div>
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
-            Alertas & Recomendações
-          </h3>
-          <AlertBanner alerts={alerts} maxVisible={5} />
-        </div>
-      )}
+      {/* Category Impact Analysis */}
+      <CategoryImpactAnalysis
+        categoryImpacts={categoryImpact.categoryImpacts}
+        topSpenders={categoryImpact.topSpenders}
+        trendingUp={categoryImpact.trendingUp}
+        trendingDown={categoryImpact.trendingDown}
+        totalSpent={categoryImpact.totalSpent}
+      />
 
       {/* Quick Action */}
       <div className="card p-6 bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 border-blue-200 dark:border-blue-800">

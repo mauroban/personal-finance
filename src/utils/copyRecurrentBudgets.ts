@@ -1,6 +1,7 @@
 import { db } from '@/db'
 import { Budget } from '@/types'
 import { dateToMonthNumber } from './date'
+import { logger } from './logger'
 
 /**
  * Copies recurring and installment budgets from previous months to the current month
@@ -60,7 +61,9 @@ export const copyRecurrentBudgets = async (
     }
   }
 
-  console.log(`📋 Found ${budgetMap.size} unique recurring/installment budgets from previous months`)
+  logger.debug('Found recurring/installment budgets from previous months', {
+    count: budgetMap.size,
+  })
 
   // Check which budgets already exist for current month
   const existingBudgets = await db.budgets
@@ -127,12 +130,16 @@ export const copyRecurrentBudgets = async (
   }
 
     if (copiedCount > 0) {
-      console.log(`✅ Copied ${copiedCount} budgets to ${year}-${month}`)
+      logger.info('Copied budgets to current month', {
+        copiedCount,
+        year,
+        month,
+      })
     }
 
     return { success: true, copiedCount }
   } catch (error) {
-    console.error('Failed to copy recurrent budgets:', error)
+    logger.error('Failed to copy recurrent budgets', { error, year, month })
     return {
       success: false,
       copiedCount: 0,

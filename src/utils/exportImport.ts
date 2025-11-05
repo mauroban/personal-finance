@@ -1,5 +1,6 @@
 import { AppData } from '@/types'
 import { db } from '@/db'
+import { logger } from './logger'
 
 /**
  * Exports all application data to a JSON file
@@ -31,7 +32,7 @@ export const exportData = async (): Promise<void> => {
     document.body.removeChild(a)
     URL.revokeObjectURL(url)
   } catch (error) {
-    console.error('Failed to export data:', error)
+    logger.error('Failed to export data', { error })
     throw new Error(`Export failed: ${error instanceof Error ? error.message : 'Unknown error'}`)
   }
 }
@@ -88,7 +89,7 @@ export const importData = async (file: File): Promise<void> => {
 
         resolve()
       } catch (error) {
-        console.error('Import failed:', error)
+        logger.error('Import failed', { error })
         reject(error instanceof Error ? error : new Error('Unknown import error'))
       }
     }

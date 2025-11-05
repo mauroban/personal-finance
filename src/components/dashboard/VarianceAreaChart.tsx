@@ -12,6 +12,7 @@ import {
 } from 'recharts'
 import { VariancePoint } from '@/hooks/useTrendCalculations'
 import { formatCurrency } from '@/utils/format'
+import { TooltipProps, AreaChartEntry } from '@/types/recharts'
 
 interface VarianceAreaChartProps {
   varianceTrend: VariancePoint[]
@@ -33,15 +34,17 @@ export const VarianceAreaChart: React.FC<VarianceAreaChartProps> = ({
     )
   }
 
-  // Transform data for chart
-  const chartData = varianceTrend.map((point) => ({
+  // Transform data for chart with separate positive/negative values
+  const chartData: AreaChartEntry[] = varianceTrend.map((point) => ({
     month: `${point.monthName.substring(0, 3)}/${point.year}`,
     variance: point.variance,
+    positiveVariance: point.variance >= 0 ? point.variance : 0,
+    negativeVariance: point.variance < 0 ? point.variance : 0,
     budgeted: point.budgeted,
     actual: point.actual,
   }))
 
-  const CustomTooltip = ({ active, payload }: any) => {
+  const CustomTooltip = ({ active, payload }: TooltipProps<AreaChartEntry>) => {
     if (active && payload && payload.length) {
       const variance = payload[0].value
       const isPositive = variance >= 0
@@ -114,24 +117,24 @@ export const VarianceAreaChart: React.FC<VarianceAreaChartProps> = ({
           {/* Reference line at 0 */}
           <ReferenceLine y={0} stroke="#6b7280" strokeDasharray="3 3" />
 
-          {/* Area for variance */}
+          {/* Area for variance - split into positive and negative */}
           <Area
             type="monotone"
-            dataKey="variance"
+            dataKey="positiveVariance"
             stroke="#3b82f6"
             strokeWidth={2}
             fill="url(#colorPositive)"
-            name="Variação"
-            fillOpacity={(entry: any) => (entry.variance >= 0 ? 1 : 0)}
+            name="Variação Positiva"
+            fillOpacity={0.6}
           />
           <Area
             type="monotone"
-            dataKey="variance"
-            stroke="#3b82f6"
+            dataKey="negativeVariance"
+            stroke="#ef4444"
             strokeWidth={2}
             fill="url(#colorNegative)"
-            name=""
-            fillOpacity={(entry: any) => (entry.variance < 0 ? 1 : 0)}
+            name="Variação Negativa"
+            fillOpacity={0.6}
           />
         </AreaChart>
       </ResponsiveContainer>

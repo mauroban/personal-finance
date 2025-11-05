@@ -1,6 +1,7 @@
 import React, { useState } from 'react'
 import { Button } from '@/components/common/Button'
 import { resetDatabase } from '@/utils/resetDatabase'
+import { logger } from '@/utils/logger'
 
 export const DatabaseReset: React.FC = () => {
   const [isResetting, setIsResetting] = useState(false)
@@ -24,8 +25,8 @@ export const DatabaseReset: React.FC = () => {
       alert('✅ Banco de dados resetado com sucesso! A página será recarregada.')
       window.location.reload()
     } catch (error) {
-      alert('❌ Erro ao resetar banco de dados. Verifique o console.')
-      console.error(error)
+      alert('❌ Erro ao resetar banco de dados. Tente novamente.')
+      logger.error('Failed to reset database from UI', { error })
     } finally {
       setIsResetting(false)
     }

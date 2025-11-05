@@ -2,13 +2,20 @@ import React from 'react'
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts'
 import { formatCurrency } from '@/utils/format'
 import { MonthSummary } from '@/types'
+import { TooltipProps } from '@/types/recharts'
 
 interface IncomeExpenseChartProps {
   monthSummary: MonthSummary
 }
 
+interface ChartData {
+  name: string
+  Planejado: number
+  Real: number
+}
+
 export const IncomeExpenseChart: React.FC<IncomeExpenseChartProps> = ({ monthSummary }) => {
-  const data = [
+  const data: ChartData[] = [
     {
       name: 'Receitas',
       Planejado: monthSummary.budgetedIncome,
@@ -21,14 +28,14 @@ export const IncomeExpenseChart: React.FC<IncomeExpenseChartProps> = ({ monthSum
     },
   ]
 
-  const CustomTooltip = ({ active, payload }: any) => {
+  const CustomTooltip = ({ active, payload }: TooltipProps<ChartData>) => {
     if (active && payload && payload.length) {
       return (
         <div className="bg-white dark:bg-gray-800 p-4 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700">
           <p className="font-semibold text-gray-900 dark:text-white mb-2">
             {payload[0].payload.name}
           </p>
-          {payload.map((entry: any, index: number) => (
+          {payload.map((entry, index) => (
             <p key={index} className="text-sm" style={{ color: entry.color }}>
               {entry.name}: {formatCurrency(entry.value)}
             </p>

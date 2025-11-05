@@ -8,8 +8,6 @@ export const CategoryManager: React.FC = () => {
   const { categories, addCategory, deleteCategory } = useApp()
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [newCategoryName, setNewCategoryName] = useState('')
-  // @ts-ignore - Used for state reset
-  const [newSubcategoryName, setNewSubcategoryName] = useState('')
   const [selectedParentId, setSelectedParentId] = useState<number | undefined>()
 
   const parentCategories = categories.filter(c => !c.parentId)
@@ -19,7 +17,9 @@ export const CategoryManager: React.FC = () => {
   }
 
   const handleAddCategory = async () => {
-    if (!newCategoryName.trim()) return
+    if (!newCategoryName.trim()) {
+      return
+    }
 
     await addCategory({
       name: newCategoryName.trim(),
@@ -27,7 +27,6 @@ export const CategoryManager: React.FC = () => {
     })
 
     setNewCategoryName('')
-    setNewSubcategoryName('')
     setSelectedParentId(undefined)
     setIsModalOpen(false)
   }

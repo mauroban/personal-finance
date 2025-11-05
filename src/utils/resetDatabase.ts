@@ -1,5 +1,6 @@
 import { db } from '@/db'
 import { STORAGE_KEYS } from '@/constants/storage'
+import { logger } from './logger'
 
 /**
  * Resets the database by clearing all tables and reinitializing with default data
@@ -15,7 +16,7 @@ import { STORAGE_KEYS } from '@/constants/storage'
  */
 export const resetDatabase = async (): Promise<void> => {
   try {
-    console.log('🗑️  Clearing all data...')
+    logger.info('Clearing all database data...')
 
     // Clear all tables
     await db.transactions.clear()
@@ -26,15 +27,15 @@ export const resetDatabase = async (): Promise<void> => {
     // Clear initialization flag
     localStorage.removeItem(STORAGE_KEYS.INIT_FLAG)
 
-    console.log('✅ Database cleared successfully!')
+    logger.info('Database cleared successfully')
 
     // Reinitialize default data
     const { initializeDefaultData } = await import('./initializeDefaults')
     await initializeDefaultData()
 
-    console.log('✅ Database reset complete!')
+    logger.info('Database reset complete')
   } catch (error) {
-    console.error('❌ Failed to reset database:', error)
+    logger.error('Failed to reset database', { error })
     throw error
   }
 }

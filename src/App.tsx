@@ -5,22 +5,25 @@ import { DashboardPage } from '@/pages/DashboardPage'
 import { TransactionsPage } from '@/pages/TransactionsPage'
 import { BudgetPage } from '@/pages/BudgetPage'
 import { SetupPage } from '@/pages/SetupPage'
+import { ErrorBoundary } from '@/components/common/ErrorBoundary'
 
 function App() {
   return (
-    <Router>
-      <AppProvider>
-        <div className="min-h-screen bg-gray-50">
-          <Navbar />
-          <Routes>
-            <Route path="/" element={<DashboardPage />} />
-            <Route path="/transactions" element={<TransactionsPage />} />
-            <Route path="/budget" element={<BudgetPage />} />
-            <Route path="/setup" element={<SetupPage />} />
-          </Routes>
-        </div>
-      </AppProvider>
-    </Router>
+    <ErrorBoundary>
+      <Router>
+        <AppProvider>
+          <div className="min-h-screen bg-gray-50">
+            <Navbar />
+            <Routes>
+              <Route path="/" element={<DashboardPage />} />
+              <Route path="/transactions" element={<TransactionsPage />} />
+              <Route path="/budget" element={<BudgetPage />} />
+              <Route path="/setup" element={<SetupPage />} />
+            </Routes>
+          </div>
+        </AppProvider>
+      </Router>
+    </ErrorBoundary>
   )
 }
 

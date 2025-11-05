@@ -24,8 +24,6 @@ export const SegmentedControl = <T extends string>({
   fullWidth = false,
   className = '',
 }: SegmentedControlProps<T>) => {
-  const selectedIndex = options.findIndex((opt) => opt.value === value)
-
   // Size variants
   const sizeClasses = {
     sm: 'h-8 text-xs px-2',

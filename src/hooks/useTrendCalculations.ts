@@ -71,10 +71,19 @@ export const useTrendCalculations = (
     const currentMonthNum = dateToMonthNumber(currentYear, currentMonth)
     const startMonthNum = currentMonthNum - monthsBack + 1
 
+    // Build periods array, filtering out empty months (no transactions and no budgets)
     const periods: { year: number; month: number }[] = []
     for (let i = 0; i < monthsBack; i++) {
       const { year, month } = monthNumberToDate(startMonthNum + i)
-      periods.push({ year, month })
+
+      // Check if this month has any activity
+      const monthTransactions = transactions.filter(t => isDateInMonth(t.date, year, month))
+      const monthBudgets = budgets.filter(b => b.year === year && b.month === month)
+
+      // Only include months with expenses/income or budgets
+      if (monthTransactions.length > 0 || monthBudgets.length > 0) {
+        periods.push({ year, month })
+      }
     }
 
     // Calculate variance trend

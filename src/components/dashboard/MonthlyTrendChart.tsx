@@ -14,12 +14,22 @@ import {
 import { useYearlyCalculations } from '@/hooks/useYearlyCalculations'
 import { Transaction, Budget, Category } from '@/types'
 import { formatCurrency } from '@/utils/format'
+import { TooltipProps } from '@/types/recharts'
 
 interface MonthlyTrendChartProps {
   transactions: Transaction[]
   budgets: Budget[]
   categories: Category[]
   year: number
+}
+
+interface TrendChartData {
+  month: string
+  'Receita Planejada': number
+  'Receita Real': number
+  'Despesa Planejada': number
+  'Despesa Real': number
+  Saldo: number
 }
 
 export const MonthlyTrendChart: React.FC<MonthlyTrendChartProps> = ({
@@ -31,7 +41,7 @@ export const MonthlyTrendChart: React.FC<MonthlyTrendChartProps> = ({
   const { yearlySummary } = useYearlyCalculations(transactions, budgets, categories, year)
 
   // Filter out future months from charts
-  const chartData = yearlySummary.monthlyBreakdowns
+  const chartData: TrendChartData[] = yearlySummary.monthlyBreakdowns
     .filter(breakdown => !breakdown.isFuture)
     .map(breakdown => ({
       month: breakdown.monthName.substring(0, 3),
@@ -39,17 +49,17 @@ export const MonthlyTrendChart: React.FC<MonthlyTrendChartProps> = ({
       'Receita Real': breakdown.income,
       'Despesa Planejada': breakdown.budgetedExpense,
       'Despesa Real': breakdown.expense,
-      'Saldo': breakdown.netBalance,
+      Saldo: breakdown.netBalance,
     }))
 
-  const CustomTooltip = ({ active, payload }: any) => {
+  const CustomTooltip = ({ active, payload }: TooltipProps<TrendChartData>) => {
     if (active && payload && payload.length) {
       return (
         <div className="bg-white dark:bg-gray-800 p-4 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700">
           <p className="font-semibold text-gray-900 dark:text-white mb-2">
             {payload[0].payload.month}
           </p>
-          {payload.map((entry: any, index: number) => (
+          {payload.map((entry, index) => (
             <p key={index} className="text-sm" style={{ color: entry.color }}>
               {entry.name}: {formatCurrency(entry.value)}
             </p>

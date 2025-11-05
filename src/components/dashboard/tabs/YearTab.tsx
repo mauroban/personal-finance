@@ -34,7 +34,6 @@ export const YearTab: React.FC<YearTabProps> = ({
       .map(breakdown => {
         const budgetedBalance = breakdown.budgetedIncome - breakdown.budgetedExpense
         const actualBalance = breakdown.netBalance
-        const variance = actualBalance - budgetedBalance
 
         let status: MonthPerformanceData['status'] = 'neutral'
 

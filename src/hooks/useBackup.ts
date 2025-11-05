@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { exportData, importData } from '@/utils/exportImport'
 import { resetDatabase } from '@/utils/resetDatabase'
+import { logger } from '@/utils/logger'
 
 export const useBackup = () => {
   const [isExporting, setIsExporting] = useState(false)
@@ -11,7 +12,7 @@ export const useBackup = () => {
     try {
       await exportData()
     } catch (error) {
-      console.error('Export failed:', error)
+      logger.error('Export failed in useBackup hook', { error })
       throw error
     } finally {
       setIsExporting(false)
@@ -24,7 +25,7 @@ export const useBackup = () => {
       await importData(file)
       window.location.reload()
     } catch (error) {
-      console.error('Import failed:', error)
+      logger.error('Import failed in useBackup hook', { error })
       throw error
     } finally {
       setIsImporting(false)
@@ -32,12 +33,16 @@ export const useBackup = () => {
   }
 
   const handleReset = async () => {
-    if (window.confirm('Tem certeza que deseja apagar todos os dados? Esta ação não pode ser desfeita.')) {
+    if (
+      window.confirm(
+        'Tem certeza que deseja apagar todos os dados? Esta ação não pode ser desfeita.'
+      )
+    ) {
       try {
         await resetDatabase()
         window.location.reload()
       } catch (error) {
-        console.error('Reset failed:', error)
+        logger.error('Reset failed in useBackup hook', { error })
         throw error
       }
     }

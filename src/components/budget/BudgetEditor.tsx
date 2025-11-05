@@ -3,6 +3,7 @@ import { useApp } from '@/context/AppContext'
 import { dateToMonthNumber, monthNumberToDate } from '@/utils/date'
 import { DEFAULT_INSTALLMENT_COUNT } from '@/constants/budgetModes'
 import { db } from '@/db'
+import { logger } from '@/utils/logger'
 
 interface BudgetEditorProps {
   year: number
@@ -365,9 +366,11 @@ export const BudgetEditor: React.FC<BudgetEditorProps> = ({ year, month }) => {
       const idsToDelete = currentAndFutureBudgets.map(b => b.id!).filter(id => id !== undefined)
       await db.budgets.bulkDelete(idsToDelete)
 
-      console.log(`✨ Created ${missingMonthsToCreate.length} missing past months as 'unique' budgets`)
-      console.log(`✏️ Converted ${pastBudgets.length} existing past budgets to 'unique' mode`)
-      console.log(`🗑️ Deleted ${idsToDelete.length} current/future budgets`)
+      logger.debug('Budget mode change completed', {
+        createdPastMonths: missingMonthsToCreate.length,
+        convertedPastBudgets: pastBudgets.length,
+        deletedFutureBudgets: idsToDelete.length,
+      })
     } else {
       // For unique budgets, just delete the single entry
       await db.budgets.delete(existingBudget.id)

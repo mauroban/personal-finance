@@ -9,7 +9,9 @@
       "Bash(npx tsc:*)",
       "Bash(\"C:\\Users\\mauro\\Desktop\\personal-finance\\src\\components\\dashboard\\PerformanceHeatmap.tsx\")",
       "Bash(\"C:\\Users\\mauro\\Desktop\\personal-finance\\src\\components\\common\\LoadingState.tsx\")",
-      "Bash(\"C:\\Users\\mauro\\Desktop\\personal-finance\\src\\components\\common\\EmptyState.tsx\")"
+      "Bash(\"C:\\Users\\mauro\\Desktop\\personal-finance\\src\\components\\common\\EmptyState.tsx\")",
+      "Bash(npm uninstall:*)",
+      "Bash(npm run typecheck:*)"
     ],
     "deny": [],
     "ask": []

@@ -40,12 +40,28 @@ export const useYTDCalculations = (
       ? currentMonth - 1
       : currentMonth
 
-    const monthsCompleted = Math.max(monthsToCount, 0)
-
     // Calculate YTD totals (from January to last completed month)
-    for (let month = 1; month <= monthsCompleted; month++) {
+    // Only count months that have expenses or budgets
+    let monthsWithActivity = 0
+
+    for (let month = 1; month <= monthsToCount; month++) {
       // Sum actual transactions
       const monthTransactions = transactions.filter(t => isDateInMonth(t.date, year, month))
+      // Get month budgets
+      const monthBudgets = budgets.filter(b => b.year === year && b.month === month)
+
+      // Check if month has any activity (expenses or expense budgets)
+      const hasExpenses = monthTransactions.some(t => t.type === 'expense')
+      const hasIncome = monthTransactions.some(t => t.type === 'earning')
+      const hasExpenseBudgets = monthBudgets.some(b => b.type === 'expense')
+      const hasIncomeBudgets = monthBudgets.some(b => b.type === 'income')
+
+      // Skip months with no expenses and no budgets
+      if (!hasExpenses && !hasIncome && !hasExpenseBudgets && !hasIncomeBudgets) {
+        continue
+      }
+
+      monthsWithActivity++
 
       monthTransactions.forEach(t => {
         if (t.type === 'earning') {
@@ -55,9 +71,6 @@ export const useYTDCalculations = (
         }
       })
 
-      // Sum budgets
-      const monthBudgets = budgets.filter(b => b.year === year && b.month === month)
-
       monthBudgets.forEach(b => {
         if (b.type === 'income') {
           budgetedIncome += b.amount
@@ -66,6 +79,8 @@ export const useYTDCalculations = (
         }
       })
     }
+
+    const monthsCompleted = monthsWithActivity
 
     const totalSavings = totalIncome - totalExpense
     const budgetedSavings = budgetedIncome - budgetedExpense

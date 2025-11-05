@@ -63,6 +63,15 @@ export const useYearlyCalculations = (
       const isFuture = year > currentYear || (year === currentYear && month > currentMonth)
 
       const monthTransactions = transactions.filter(t => isDateInMonth(t.date, year, month))
+      const monthBudgets = budgets.filter(b => b.year === year && b.month === month)
+
+      // Check if month has any activity
+      const hasActivity = monthTransactions.length > 0 || monthBudgets.length > 0
+
+      // Skip empty months (no transactions and no budgets)
+      if (!hasActivity && !isFuture) {
+        continue
+      }
 
       // Only calculate actual values for past/current months
       const income = isFuture ? 0 : monthTransactions
@@ -73,12 +82,12 @@ export const useYearlyCalculations = (
         .filter(t => t.type === 'expense')
         .reduce((sum, t) => sum + t.value, 0)
 
-      const budgetedIncome = budgets
-        .filter(b => b.year === year && b.month === month && b.type === 'income')
+      const budgetedIncome = monthBudgets
+        .filter(b => b.type === 'income')
         .reduce((sum, b) => sum + b.amount, 0)
 
-      const budgetedExpense = budgets
-        .filter(b => b.year === year && b.month === month && b.type === 'expense')
+      const budgetedExpense = monthBudgets
+        .filter(b => b.type === 'expense')
         .reduce((sum, b) => sum + b.amount, 0)
 
       // Only add to totals if not a future month
