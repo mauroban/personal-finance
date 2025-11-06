@@ -25,7 +25,25 @@ export const PeriodSelector: React.FC<PeriodSelectorProps> = ({
 }) => {
   const currentYear = getCurrentYear()
   const currentMonth = getCurrentMonth()
-  const years = Array.from({ length: 5 }, (_, i) => currentYear - 2 + i) // Show 5 years: current-2, current-1, current, current+1, current+2
+  const [yearRangeStart, setYearRangeStart] = React.useState(() => {
+    // Center the selected year in the range on initial load
+    return selectedYear - 2
+  })
+
+  // Update year range when selected year changes - always center it
+  React.useEffect(() => {
+    setYearRangeStart(selectedYear - 2)
+  }, [selectedYear])
+
+  const handlePrevYears = () => {
+    setYearRangeStart(prev => prev - 1)
+  }
+
+  const handleNextYears = () => {
+    setYearRangeStart(prev => prev + 1)
+  }
+
+  const years = Array.from({ length: 5 }, (_, i) => yearRangeStart + i)
   const months = Array.from({ length: 12 }, (_, i) => i + 1)
 
   const handlePrevPeriod = () => {
@@ -120,31 +138,62 @@ export const PeriodSelector: React.FC<PeriodSelectorProps> = ({
             >
               Ano
             </label>
-            <div className="inline-flex items-center gap-1 p-1 bg-neutral-100 dark:bg-neutral-800 rounded-lg">
-              {years.map((year) => {
-                const isSelected = selectedYear === year
-                return (
-                  <button
-                    key={year}
-                    onClick={() => onYearChange(year)}
-                    className={`
-                      px-4 py-1.5 rounded-md text-sm font-semibold transition-all
-                      ${
-                        isSelected
-                          ? 'bg-white dark:bg-neutral-700 text-neutral-900 dark:text-white shadow-sm'
-                          : 'text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white'
-                      }
-                    `}
-                    style={{
-                      transition: `all ${transitions.fast}`,
-                      ...(isSelected ? { boxShadow: shadows.sm } : {}),
-                    }}
-                    aria-pressed={isSelected}
-                  >
-                    {year}
-                  </button>
-                )
-              })}
+            <div className="flex items-center gap-3">
+              <div className="inline-flex items-center gap-2">
+                <button
+                  onClick={handlePrevYears}
+                  className="p-1.5 rounded-md bg-neutral-100 dark:bg-neutral-800 hover:bg-neutral-200 dark:hover:bg-neutral-700 transition-colors"
+                  aria-label="Anos anteriores"
+                >
+                  <svg className="w-4 h-4 text-neutral-700 dark:text-neutral-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                  </svg>
+                </button>
+                <div className="inline-flex items-center gap-1 p-1 bg-neutral-100 dark:bg-neutral-800 rounded-lg">
+                  {years.map((year) => {
+                    const isSelected = selectedYear === year
+                    return (
+                      <button
+                        key={year}
+                        onClick={() => onYearChange(year)}
+                        className={`
+                          px-4 py-1.5 rounded-md text-sm font-semibold transition-all
+                          ${
+                            isSelected
+                              ? 'bg-white dark:bg-neutral-700 text-neutral-900 dark:text-white shadow-sm'
+                              : 'text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white'
+                          }
+                        `}
+                        style={{
+                          transition: `all ${transitions.fast}`,
+                          ...(isSelected ? { boxShadow: shadows.sm } : {}),
+                        }}
+                        aria-pressed={isSelected}
+                      >
+                        {year}
+                      </button>
+                    )
+                  })}
+                </div>
+                <button
+                  onClick={handleNextYears}
+                  className="p-1.5 rounded-md bg-neutral-100 dark:bg-neutral-800 hover:bg-neutral-200 dark:hover:bg-neutral-700 transition-colors"
+                  aria-label="Próximos anos"
+                >
+                  <svg className="w-4 h-4 text-neutral-700 dark:text-neutral-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                  </svg>
+                </button>
+              </div>
+              {!isCurrentPeriod && (
+                <button
+                  onClick={handleToday}
+                  className="px-3 py-1.5 rounded-md bg-primary-600 text-white text-sm font-semibold hover:bg-primary-700 transition-colors shadow-sm"
+                  style={{ boxShadow: shadows.sm }}
+                >
+                  Hoje
+                </button>
+              )}
             </div>
           </div>
 
@@ -170,16 +219,19 @@ export const PeriodSelector: React.FC<PeriodSelectorProps> = ({
               <div className={`grid gap-${compact ? '1.5' : '2'} grid-cols-4 sm:grid-cols-6 md:grid-cols-12`}>
                 {months.map((month) => {
                   const isSelected = selectedMonth === month
+                  const isCurrent = selectedYear === currentYear && month === currentMonth
                   const monthName = getMonthName(month)
                   return (
                     <button
                       key={month}
                       onClick={() => onMonthChange(month)}
                       className={`
-                        px-2 py-2 rounded-md text-xs font-semibold transition-all
+                        px-2 py-2 rounded-md text-xs font-semibold transition-all relative
                         ${
                           isSelected
                             ? 'bg-primary-600 text-white shadow-md scale-105'
+                            : isCurrent
+                            ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 hover:bg-green-200 dark:hover:bg-green-900/40 hover:scale-105 ring-2 ring-green-500 dark:ring-green-400'
                             : 'bg-neutral-100 dark:bg-neutral-800 text-neutral-700 dark:text-neutral-300 hover:bg-neutral-200 dark:hover:bg-neutral-700 hover:scale-105'
                         }
                       `}

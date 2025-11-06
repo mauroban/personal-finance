@@ -3,11 +3,16 @@ import { useApp } from '@/context/AppContext'
 import { Button } from '@/components/common/Button'
 import { Input } from '@/components/common/Input'
 import { Modal } from '@/components/common/Modal'
+import { ConfirmModal } from '@/components/common/ConfirmModal'
 
 export const SourceManager: React.FC = () => {
   const { sources, addSource, deleteSource } = useApp()
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [newSourceName, setNewSourceName] = useState('')
+  const [deleteConfirm, setDeleteConfirm] = useState<{ isOpen: boolean; id: number | null }>({
+    isOpen: false,
+    id: null,
+  })
 
   const handleAddSource = async () => {
     if (!newSourceName.trim()) return
@@ -20,9 +25,14 @@ export const SourceManager: React.FC = () => {
     setIsModalOpen(false)
   }
 
-  const handleDelete = async (id: number) => {
-    if (window.confirm('Tem certeza que deseja excluir esta fonte de renda?')) {
-      await deleteSource(id)
+  const handleDelete = (id: number) => {
+    setDeleteConfirm({ isOpen: true, id })
+  }
+
+  const confirmDelete = async () => {
+    if (deleteConfirm.id) {
+      await deleteSource(deleteConfirm.id)
+      setDeleteConfirm({ isOpen: false, id: null })
     }
   }
 
@@ -44,6 +54,7 @@ export const SourceManager: React.FC = () => {
               variant="danger"
               size="sm"
               onClick={() => handleDelete(source.id!)}
+              aria-label={`Excluir fonte de renda ${source.name}`}
             >
               Excluir
             </Button>
@@ -80,6 +91,17 @@ export const SourceManager: React.FC = () => {
           </div>
         </div>
       </Modal>
+
+      <ConfirmModal
+        isOpen={deleteConfirm.isOpen}
+        onClose={() => setDeleteConfirm({ isOpen: false, id: null })}
+        onConfirm={confirmDelete}
+        title="Excluir Fonte de Renda"
+        message="Tem certeza que deseja excluir esta fonte de renda? Esta ação não pode ser desfeita."
+        confirmText="Excluir"
+        cancelText="Cancelar"
+        variant="danger"
+      />
     </div>
   )
 }

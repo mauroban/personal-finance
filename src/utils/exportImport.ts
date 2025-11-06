@@ -1,6 +1,33 @@
 import { AppData } from '@/types'
 import { db } from '@/db'
 import { logger } from './logger'
+import { sanitizeText } from './sanitize'
+
+/**
+ * Sanitizes string fields in imported data to prevent XSS attacks
+ *
+ * @param data - The imported app data
+ * @returns Sanitized app data
+ */
+const sanitizeImportedData = (data: AppData): AppData => {
+  return {
+    ...data,
+    categories: data.categories.map(cat => ({
+      ...cat,
+      name: sanitizeText(cat.name),
+    })),
+    sources: data.sources.map(source => ({
+      ...source,
+      name: sanitizeText(source.name),
+    })),
+    budgets: data.budgets,  // Budgets only contain numbers and IDs
+    transactions: data.transactions.map(trans => ({
+      ...trans,
+      note: trans.note ? sanitizeText(trans.note) : trans.note,
+      paymentMethod: trans.paymentMethod ? sanitizeText(trans.paymentMethod) : trans.paymentMethod,
+    })),
+  }
+}
 
 /**
  * Exports all application data to a JSON file
@@ -69,6 +96,9 @@ export const importData = async (file: File): Promise<void> => {
             !Array.isArray(data.budgets) || !Array.isArray(data.transactions)) {
           throw new Error('Invalid backup file format: data fields must be arrays')
         }
+
+        // Sanitize all string fields to prevent XSS
+        data = sanitizeImportedData(data)
 
         // Import data
         try {

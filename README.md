@@ -195,6 +195,7 @@ See `docs/technical-context.md` for detailed testing guidelines.
 
 ## 🌟 Features
 
+### Core Functionality
 ✅ **Local-first data storage** - All data stays on your device
 ✅ **Pre-loaded Brazilian categories** - 9 main categories with 40+ subcategories
 ✅ **Custom expense categories** with unlimited subcategories
@@ -211,9 +212,24 @@ See `docs/technical-context.md` for detailed testing guidelines.
 ✅ **Visual progress indicators** with color coding
 ✅ **Drill-down navigation** - Click months in yearly view to edit details
 ✅ **View mode persistence** - Your monthly/yearly preference is remembered
-✅ **Export/Import backup system** (.json format)
+✅ **Export/Import backup system** (.json format with XSS protection)
 ✅ **Brazilian Real (BRL)** currency format
 ✅ **Portuguese UI** throughout
+
+### UX & Accessibility
+✅ **Mobile responsive design** - Optimized layouts for all screen sizes
+✅ **Touch-friendly interface** - Smooth scrolling and mobile-optimized controls
+✅ **Accessible modals** - ARIA attributes, focus management, keyboard navigation
+✅ **Screen reader support** - Descriptive labels for all interactive elements
+✅ **Keyboard navigation** - Arrow keys, Tab, Escape support throughout
+✅ **Loading states** - Visual feedback during async operations
+✅ **Error handling** - User-friendly error messages in modals
+
+### Performance
+✅ **Code splitting** - Lazy-loaded pages and components
+✅ **Optimized bundle** - 61% smaller initial load (308KB vs 794KB)
+✅ **Memoized callbacks** - Prevents unnecessary re-renders
+✅ **Fast startup** - Only loads what you need, when you need it
 
 ## 🔒 Privacy
 

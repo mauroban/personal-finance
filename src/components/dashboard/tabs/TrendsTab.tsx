@@ -12,18 +12,19 @@ interface TrendsTabProps {
   transactions: Transaction[]
   budgets: Budget[]
   categories: Category[]
-  year: number
-  month: number
 }
 
 export const TrendsTab: React.FC<TrendsTabProps> = ({
   transactions,
   budgets,
   categories,
-  year,
-  month,
 }) => {
   const [selectedPeriod, setSelectedPeriod] = useState<string>('6')
+
+  // Always use current date for Trends
+  const today = new Date()
+  const year = today.getFullYear()
+  const month = today.getMonth() + 1
 
   const handlePeriodChange = (newPeriod: string) => {
     // Save current scroll position

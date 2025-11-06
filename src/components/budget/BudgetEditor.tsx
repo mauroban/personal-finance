@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react'
 import { useApp } from '@/context/AppContext'
 import { dateToMonthNumber, monthNumberToDate } from '@/utils/date'
 import { DEFAULT_INSTALLMENT_COUNT } from '@/constants/budgetModes'
+import { CURRENCY_CONFIG, CENTS_PER_REAL } from '@/constants/formatting'
 import { db } from '@/db'
 import { logger } from '@/utils/logger'
 
@@ -94,17 +95,17 @@ export const BudgetEditor: React.FC<BudgetEditorProps> = ({ year, month }) => {
   }, [budgets, year, month, parentCategories, sources, categories])
 
   const formatCurrencyValue = (value: number): string => {
-    return value.toLocaleString('pt-BR', {
+    return value.toLocaleString(CURRENCY_CONFIG.locale, {
       style: 'currency',
-      currency: 'BRL',
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2
+      currency: CURRENCY_CONFIG.currency,
+      minimumFractionDigits: CURRENCY_CONFIG.minimumFractionDigits,
+      maximumFractionDigits: CURRENCY_CONFIG.maximumFractionDigits
     })
   }
 
   const formatCurrency = (cents: number): string => {
-    const reais = Math.floor(cents / 100)
-    const centavos = cents % 100
+    const reais = Math.floor(cents / CENTS_PER_REAL)
+    const centavos = cents % CENTS_PER_REAL
     return `R$ ${reais},${centavos.toString().padStart(2, '0')}`
   }
 
@@ -432,8 +433,8 @@ export const BudgetEditor: React.FC<BudgetEditorProps> = ({ year, month }) => {
 
   return (
     <div className="space-y-6">
-      <div className="card p-6">
-        <h3 className="text-lg font-semibold text-gray-900 mb-4">Receitas Previstas</h3>
+      <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-6">
+        <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Receitas Previstas</h3>
         <div className="space-y-2">
           {sources.map(source => {
             const key = `income-${source.id}`
@@ -441,48 +442,50 @@ export const BudgetEditor: React.FC<BudgetEditorProps> = ({ year, month }) => {
             const installmentCount = installmentCounts[key] || DEFAULT_INSTALLMENT_COUNT
 
             return (
-              <div key={source.id} className="flex items-center gap-3 p-3 border border-gray-200 rounded-lg hover:border-gray-300 transition-colors group">
-                <span className="text-gray-700 font-medium min-w-[120px]">{source.name}</span>
+              <div key={source.id} className="flex flex-col md:flex-row md:items-center gap-3 p-3 border border-gray-200 dark:border-gray-700 rounded-lg hover:border-gray-300 dark:hover:border-gray-600 transition-colors group">
+                <span className="text-gray-700 dark:text-gray-300 font-medium md:min-w-[120px]">{source.name}</span>
 
-                <select
-                  value={mode}
-                  onChange={e => handleModeChange(key, e.target.value as any, 'income', undefined, undefined, source.id)}
-                  className="text-sm border border-gray-300 rounded px-2 py-1.5 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                >
-                  <option value="unique">Único</option>
-                  <option value="recurring">Recorrente</option>
-                  <option value="installment">Parcelado</option>
-                </select>
-
-                {mode === 'installment' && (
-                  <>
-                    <input
-                      type="number"
-                      min="2"
-                      value={installmentCount}
-                      onChange={e => handleInstallmentCountChange(
-                        key,
-                        parseInt(e.target.value) || 2,
-                        'income',
-                        undefined,
-                        undefined,
-                        source.id
-                      )}
-                      className="w-16 text-sm border border-gray-300 rounded px-2 py-1.5 text-center focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    />
-                    <span className="text-sm text-gray-500">x</span>
-                  </>
-                )}
-
-                {budgetValues[key] && budgetValues[key] > 0 && (
-                  <button
-                    onClick={() => handleDelete(key, 'income', undefined, undefined, source.id)}
-                    className="text-gray-400 hover:text-red-600 transition-colors ml-1"
-                    title="Remover orçamento"
+                <div className="flex items-center gap-2 flex-wrap">
+                  <select
+                    value={mode}
+                    onChange={e => handleModeChange(key, e.target.value as any, 'income', undefined, undefined, source.id)}
+                    className="text-sm border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded px-2 py-1.5 focus:outline-none focus:ring-2 focus:ring-blue-500"
                   >
-                    ✕
-                  </button>
-                )}
+                    <option value="unique">Único</option>
+                    <option value="recurring">Recorrente</option>
+                    <option value="installment">Parcelado</option>
+                  </select>
+
+                  {mode === 'installment' && (
+                    <>
+                      <input
+                        type="number"
+                        min="2"
+                        value={installmentCount}
+                        onChange={e => handleInstallmentCountChange(
+                          key,
+                          parseInt(e.target.value) || 2,
+                          'income',
+                          undefined,
+                          undefined,
+                          source.id
+                        )}
+                        className="w-16 text-sm border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded px-2 py-1.5 text-center focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      />
+                      <span className="text-sm text-gray-500">x</span>
+                    </>
+                  )}
+
+                  {budgetValues[key] && budgetValues[key] > 0 && (
+                    <button
+                      onClick={() => handleDelete(key, 'income', undefined, undefined, source.id)}
+                      className="text-gray-400 hover:text-red-600 transition-colors ml-1"
+                      title="Remover orçamento"
+                    >
+                      ✕
+                    </button>
+                  )}
+                </div>
 
                 <input
                   type="text"
@@ -498,7 +501,7 @@ export const BudgetEditor: React.FC<BudgetEditorProps> = ({ year, month }) => {
                     }
                   }}
                   onBlur={() => handleBlur(key, 'income', undefined, undefined, source.id)}
-                  className="flex-1 text-sm border border-gray-300 rounded px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-blue-500 placeholder:text-gray-400"
+                  className="flex-1 md:flex-auto w-full md:w-auto text-sm border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-blue-500 placeholder:text-gray-400 dark:placeholder:text-gray-500"
                   placeholder="R$ 0,00"
                   readOnly
                 />
@@ -506,16 +509,16 @@ export const BudgetEditor: React.FC<BudgetEditorProps> = ({ year, month }) => {
             )
           })}
         </div>
-        <div className="mt-4 pt-4 border-t border-gray-200 flex justify-between items-center">
-          <span className="font-semibold text-gray-900">Total Previsto:</span>
-          <span className="text-xl font-bold text-green-600">
+        <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700 flex justify-between items-center">
+          <span className="font-semibold text-gray-900 dark:text-white">Total Previsto:</span>
+          <span className="text-xl font-bold text-green-600 dark:text-green-400">
             {formatCurrencyValue(totalIncomeBudget)}
           </span>
         </div>
       </div>
 
-      <div className="card p-6">
-        <h3 className="text-lg font-semibold text-gray-900 mb-4">Despesas Planejadas</h3>
+      <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-6">
+        <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Despesas Planejadas</h3>
         <div className="space-y-3">
           {parentCategories.map(cat => {
             const subcats = getSubcategories(cat.id!)
@@ -523,74 +526,78 @@ export const BudgetEditor: React.FC<BudgetEditorProps> = ({ year, month }) => {
             const categoryTotal = getTotalForCategory(cat.id!)
 
             return (
-              <div key={cat.id} className="border border-gray-200 rounded-lg overflow-hidden group">
-                <div className="bg-gray-50 p-3">
-                  <div className="flex items-center gap-3">
-                    {subcats.length > 0 && (
-                      <button
-                        onClick={() => toggleCategory(cat.id!)}
-                        className="text-gray-600 hover:text-gray-900 text-sm"
-                      >
-                        {isExpanded ? '▼' : '▶'}
-                      </button>
-                    )}
-                    <span className="text-gray-900 font-semibold flex-1 min-w-[120px]">{cat.name}</span>
+              <div key={cat.id} className="border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden group">
+                <div className="bg-gray-50 dark:bg-gray-700/50 p-3">
+                  <div className="flex flex-col md:flex-row md:items-center gap-2 md:gap-3">
+                    <div className="flex items-center gap-3 flex-1">
+                      {subcats.length > 0 && (
+                        <button
+                          onClick={() => toggleCategory(cat.id!)}
+                          className="text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 text-sm"
+                        >
+                          {isExpanded ? '▼' : '▶'}
+                        </button>
+                      )}
+                      <span className="text-gray-900 dark:text-white font-semibold flex-1 md:min-w-[120px]">{cat.name}</span>
+                    </div>
 
-                    <span className="text-sm text-gray-700 font-medium min-w-[100px] text-right">
+                    <span className="text-sm text-gray-700 dark:text-gray-300 font-medium md:min-w-[100px] md:text-right">
                       Total: {formatCurrencyValue(categoryTotal)}
                     </span>
                   </div>
                 </div>
 
                 {isExpanded && subcats.length > 0 && (
-                  <div className="p-3 pl-10 space-y-2 bg-white">
+                  <div className="p-3 pl-10 space-y-2 bg-white dark:bg-gray-800">
                     {subcats.map(sub => {
                       const subKey = `expense-${cat.id}-${sub.id}`
                       const subMode = budgetModes[subKey] || 'unique'
                       const subInstallmentCount = installmentCounts[subKey] || DEFAULT_INSTALLMENT_COUNT
 
                       return (
-                        <div key={sub.id} className="flex items-center gap-2 group/sub">
-                          <span className="text-gray-600 text-sm min-w-[100px]">• {sub.name}</span>
+                        <div key={sub.id} className="flex flex-col md:flex-row md:items-center gap-2 group/sub">
+                          <span className="text-gray-600 dark:text-gray-400 text-sm md:min-w-[100px]">• {sub.name}</span>
 
-                          <select
-                            value={subMode}
-                            onChange={e => handleModeChange(subKey, e.target.value as any, 'expense', cat.id, sub.id)}
-                            className="text-xs border border-gray-300 rounded px-2 py-1 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                          >
-                            <option value="unique">Único</option>
-                            <option value="recurring">Recorrente</option>
-                            <option value="installment">Parcelado</option>
-                          </select>
-
-                          {subMode === 'installment' && (
-                            <>
-                              <input
-                                type="number"
-                                min="2"
-                                value={subInstallmentCount}
-                                onChange={e => handleInstallmentCountChange(
-                                  subKey,
-                                  parseInt(e.target.value) || 2,
-                                  'expense',
-                                  cat.id,
-                                  sub.id
-                                )}
-                                className="w-14 text-xs border border-gray-300 rounded px-2 py-1 text-center focus:outline-none focus:ring-2 focus:ring-blue-500"
-                              />
-                              <span className="text-xs text-gray-500">x</span>
-                            </>
-                          )}
-
-                          {budgetValues[subKey] && budgetValues[subKey] > 0 && (
-                            <button
-                              onClick={() => handleDelete(subKey, 'expense', cat.id, sub.id)}
-                              className="text-gray-400 hover:text-red-600 transition-colors ml-1"
-                              title="Remover orçamento"
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <select
+                              value={subMode}
+                              onChange={e => handleModeChange(subKey, e.target.value as any, 'expense', cat.id, sub.id)}
+                              className="text-xs border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded px-2 py-1 focus:outline-none focus:ring-2 focus:ring-blue-500"
                             >
-                              ✕
-                            </button>
-                          )}
+                              <option value="unique">Único</option>
+                              <option value="recurring">Recorrente</option>
+                              <option value="installment">Parcelado</option>
+                            </select>
+
+                            {subMode === 'installment' && (
+                              <>
+                                <input
+                                  type="number"
+                                  min="2"
+                                  value={subInstallmentCount}
+                                  onChange={e => handleInstallmentCountChange(
+                                    subKey,
+                                    parseInt(e.target.value) || 2,
+                                    'expense',
+                                    cat.id,
+                                    sub.id
+                                  )}
+                                  className="w-14 text-xs border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded px-2 py-1 text-center focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                />
+                                <span className="text-xs text-gray-500">x</span>
+                              </>
+                            )}
+
+                            {budgetValues[subKey] && budgetValues[subKey] > 0 && (
+                              <button
+                                onClick={() => handleDelete(subKey, 'expense', cat.id, sub.id)}
+                                className="text-gray-400 hover:text-red-600 transition-colors ml-1"
+                                title="Remover orçamento"
+                              >
+                                ✕
+                              </button>
+                            )}
+                          </div>
 
                           <input
                             type="text"
@@ -606,7 +613,7 @@ export const BudgetEditor: React.FC<BudgetEditorProps> = ({ year, month }) => {
                               }
                             }}
                             onBlur={() => handleBlur(subKey, 'expense', cat.id, sub.id)}
-                            className="flex-1 text-xs border border-gray-300 rounded px-2 py-1 focus:outline-none focus:ring-2 focus:ring-blue-500 placeholder:text-gray-400"
+                            className="flex-1 md:flex-auto w-full md:w-auto text-xs border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded px-2 py-1 focus:outline-none focus:ring-2 focus:ring-blue-500 placeholder:text-gray-400 dark:placeholder:text-gray-500"
                             placeholder="R$ 0,00"
                             readOnly
                           />
@@ -619,18 +626,18 @@ export const BudgetEditor: React.FC<BudgetEditorProps> = ({ year, month }) => {
             )
           })}
         </div>
-        <div className="mt-4 pt-4 border-t border-gray-200 flex justify-between items-center">
-          <span className="font-semibold text-gray-900">Total Planejado:</span>
-          <span className="text-xl font-bold text-red-600">
+        <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700 flex justify-between items-center">
+          <span className="font-semibold text-gray-900 dark:text-white">Total Planejado:</span>
+          <span className="text-xl font-bold text-red-600 dark:text-red-400">
             {formatCurrencyValue(totalExpenseBudget)}
           </span>
         </div>
       </div>
 
-      <div className="card p-8 bg-gradient-to-br from-blue-50 to-indigo-50">
+      <div className="bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 rounded-xl shadow-sm p-8 border border-blue-100 dark:border-blue-800">
         <div className="flex justify-between items-center">
-          <span className="text-lg font-semibold text-gray-900">Saldo Previsto:</span>
-          <span className={`text-2xl font-bold ${totalIncomeBudget - totalExpenseBudget >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+          <span className="text-lg font-semibold text-gray-900 dark:text-white">Saldo Previsto:</span>
+          <span className={`text-2xl font-bold ${totalIncomeBudget - totalExpenseBudget >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
             {formatCurrencyValue(totalIncomeBudget - totalExpenseBudget)}
           </span>
         </div>

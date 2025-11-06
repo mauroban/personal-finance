@@ -75,18 +75,21 @@ export const calculateVariancePercentage = (actual: number, budgeted: number): n
 }
 
 /**
- * Determines if a value is over budget
+ * Determines if a value is over budget (with 5% tolerance)
  *
  * @param actual - Actual spending
  * @param budgeted - Budgeted amount
- * @returns True if over budget, false otherwise
+ * @returns True if over budget (>105%), false otherwise
  *
  * @example
- * isOverBudget(120, 100) // Returns true
+ * isOverBudget(120, 100) // Returns true (120% of budget)
+ * isOverBudget(104, 100) // Returns false (104% is within tolerance)
  * isOverBudget(80, 100) // Returns false
  */
 export const isOverBudget = (actual: number, budgeted: number): boolean => {
-  return budgeted > 0 && actual > budgeted
+  if (budgeted === 0) return false
+  const percentage = (actual / budgeted) * 100
+  return percentage > 105 // 5% tolerance
 }
 
 /**

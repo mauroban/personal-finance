@@ -72,7 +72,7 @@ export const dateToMonthNumber = (year: number, month: number): number => {
  * @returns An object with year and month properties
  */
 export const monthNumberToDate = (monthNum: number): { year: number; month: number } => {
-  const year = Math.floor(monthNum / 12)
-  const month = monthNum % 12
-  return { year, month: month === 0 ? 12 : month }
+  const year = Math.floor((monthNum - 1) / 12)
+  const month = ((monthNum - 1) % 12) + 1
+  return { year, month }
 }

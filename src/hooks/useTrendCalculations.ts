@@ -1,6 +1,7 @@
 import { useMemo } from 'react'
 import { Transaction, Budget, Category } from '@/types'
 import { isDateInMonth, getMonthName, dateToMonthNumber, monthNumberToDate } from '@/utils/date'
+import { TREND_THRESHOLDS, BUDGET_ADHERENCE } from '@/constants/formatting'
 
 export interface MonthDataPoint {
   month: number
@@ -71,19 +72,11 @@ export const useTrendCalculations = (
     const currentMonthNum = dateToMonthNumber(currentYear, currentMonth)
     const startMonthNum = currentMonthNum - monthsBack + 1
 
-    // Build periods array, filtering out empty months (no transactions and no budgets)
+    // Build periods array for all months in range (including empty months)
     const periods: { year: number; month: number }[] = []
     for (let i = 0; i < monthsBack; i++) {
       const { year, month } = monthNumberToDate(startMonthNum + i)
-
-      // Check if this month has any activity
-      const monthTransactions = transactions.filter(t => isDateInMonth(t.date, year, month))
-      const monthBudgets = budgets.filter(b => b.year === year && b.month === month)
-
-      // Only include months with expenses/income or budgets
-      if (monthTransactions.length > 0 || monthBudgets.length > 0) {
-        periods.push({ year, month })
-      }
+      periods.push({ year, month })
     }
 
     // Calculate variance trend
@@ -184,7 +177,7 @@ export const useTrendCalculations = (
       const percentageChange = firstHalfAvg > 0 ? ((secondHalfAvg - firstHalfAvg) / firstHalfAvg) * 100 : 0
 
       let trend: 'up' | 'down' | 'stable' = 'stable'
-      if (Math.abs(percentageChange) > 10) {
+      if (Math.abs(percentageChange) > TREND_THRESHOLDS.significantChange) {
         trend = percentageChange > 0 ? 'up' : 'down'
       }
 
@@ -213,9 +206,9 @@ export const useTrendCalculations = (
       if (budgetedExpense > 0) {
         const percentage = (expense / budgetedExpense) * 100
         if (percentage <= 100) {
-          adherenceScore += (100 - percentage) + 50 // 50-100 scale
+          adherenceScore += (BUDGET_ADHERENCE.maxScore - percentage) + BUDGET_ADHERENCE.baseScore
         } else {
-          adherenceScore += Math.max(0, 50 - (percentage - 100)) // Penalize overspending
+          adherenceScore += Math.max(0, BUDGET_ADHERENCE.baseScore - (percentage - 100)) // Penalize overspending
         }
         monthsWithBudget++
       }
@@ -223,11 +216,23 @@ export const useTrendCalculations = (
 
     const budgetAdherence = monthsWithBudget > 0 ? adherenceScore / monthsWithBudget : 0
 
-    // Calculate period summary
-    const totalIncome = varianceTrend.reduce((sum, v) => sum + v.actual + v.budgeted - v.variance, 0)
-    const totalExpense = varianceTrend.reduce((sum, v) => sum + (v.budgeted - v.actual + v.variance), 0)
+    // Calculate period summary by summing transactions across all periods
+    const totalIncome = periods.reduce((sum, { year, month }) => {
+      const monthTransactions = transactions.filter(t => isDateInMonth(t.date, year, month))
+      return sum + monthTransactions
+        .filter(t => t.type === 'earning')
+        .reduce((acc, t) => acc + t.value, 0)
+    }, 0)
+
+    const totalExpense = periods.reduce((sum, { year, month }) => {
+      const monthTransactions = transactions.filter(t => isDateInMonth(t.date, year, month))
+      return sum + monthTransactions
+        .filter(t => t.type === 'expense')
+        .reduce((acc, t) => acc + t.value, 0)
+    }, 0)
+
     const totalSavings = savingsTrend.reduce((sum, s) => sum + s.savings, 0)
-    const averageMonthlySavings = totalSavings / periods.length
+    const averageMonthlySavings = periods.length > 0 ? totalSavings / periods.length : 0
 
     // Generate insights
     const insights: TrendInsight[] = []
@@ -271,13 +276,13 @@ export const useTrendCalculations = (
     }
 
     // Budget adherence insight
-    if (budgetAdherence >= 70) {
+    if (budgetAdherence >= BUDGET_ADHERENCE.goodThreshold) {
       insights.push({
         type: 'achievement',
         message: `Excelente! Você manteve ${budgetAdherence.toFixed(0)}% de aderência ao orçamento`,
         icon: '🎯',
       })
-    } else if (budgetAdherence < 50) {
+    } else if (budgetAdherence < BUDGET_ADHERENCE.poorThreshold) {
       insights.push({
         type: 'recommendation',
         message: 'Revise seus orçamentos para melhorar o controle financeiro',

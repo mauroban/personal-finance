@@ -1,6 +1,5 @@
 import React, { useMemo } from 'react'
 import { Transaction, Budget, Category } from '@/types'
-import { PeriodSelector } from '@/components/common/PeriodSelector'
 import { YearlySummary } from '@/components/dashboard/YearlySummary'
 import { MonthlyTrendChart } from '@/components/dashboard/MonthlyTrendChart'
 import { MonthlyBreakdownTable } from '@/components/dashboard/MonthlyBreakdownTable'
@@ -22,7 +21,6 @@ export const YearTab: React.FC<YearTabProps> = ({
   budgets,
   categories,
   year,
-  onYearChange,
   onMonthClick,
 }) => {
   const { yearlySummary } = useYearlyCalculations(transactions, budgets, categories, year)
@@ -66,17 +64,6 @@ export const YearTab: React.FC<YearTabProps> = ({
 
   return (
     <div className="space-y-6">
-      {/* Year Selector */}
-      <div className="card p-6">
-        <PeriodSelector
-          selectedYear={year}
-          onYearChange={onYearChange}
-          showMonths={false}
-          showNavigation={false}
-          showTodayButton={false}
-        />
-      </div>
-
       <YearlySummary
         transactions={transactions}
         budgets={budgets}

@@ -65,14 +65,7 @@ export const useYearlyCalculations = (
       const monthTransactions = transactions.filter(t => isDateInMonth(t.date, year, month))
       const monthBudgets = budgets.filter(b => b.year === year && b.month === month)
 
-      // Check if month has any activity
-      const hasActivity = monthTransactions.length > 0 || monthBudgets.length > 0
-
-      // Skip empty months (no transactions and no budgets)
-      if (!hasActivity && !isFuture) {
-        continue
-      }
-
+      // Always include all 12 months for complete year view (even if empty)
       // Only calculate actual values for past/current months
       const income = isFuture ? 0 : monthTransactions
         .filter(t => t.type === 'earning')

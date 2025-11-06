@@ -1,6 +1,5 @@
 import React from 'react'
 import { Transaction, Budget, Category, Source } from '@/types'
-import { PeriodSelector } from '@/components/common/PeriodSelector'
 import { SummaryCard } from '@/components/dashboard/SummaryCard'
 import { GroupBreakdown } from '@/components/dashboard/GroupBreakdown'
 import { TopTransactions } from '@/components/dashboard/TopTransactions'
@@ -25,8 +24,6 @@ export const MonthTab: React.FC<MonthTabProps> = ({
   sources,
   selectedYear,
   selectedMonth,
-  onYearChange,
-  onMonthChange,
 }) => {
   const { monthSummary, groupSummariesWithSubcategories } = useBudgetCalculations(
     transactions,
@@ -48,33 +45,6 @@ export const MonthTab: React.FC<MonthTabProps> = ({
 
   return (
     <div className="space-y-6">
-      {/* Period Selector with Navigation and Year Selection */}
-      <div className="card p-6">
-        <div className="space-y-4">
-          {/* Year Selector */}
-          <PeriodSelector
-            selectedYear={selectedYear}
-            selectedMonth={selectedMonth}
-            onYearChange={onYearChange}
-            onMonthChange={onMonthChange}
-            showMonths={false}
-            showNavigation={false}
-            showTodayButton={false}
-          />
-
-          {/* Month Navigation */}
-          <PeriodSelector
-            selectedYear={selectedYear}
-            selectedMonth={selectedMonth}
-            onYearChange={onYearChange}
-            onMonthChange={onMonthChange}
-            showMonths={true}
-            showNavigation={true}
-            showTodayButton={true}
-          />
-        </div>
-      </div>
-
       {/* Performance Summary Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <SummaryCard

@@ -129,13 +129,13 @@ export const useCategoryImpact = (
             spent,
             budgeted,
             percentage,
-            isOverBudget: budgeted > 0 && spent > budgeted,
+            isOverBudget: percentage > 105, // 5% tolerance
             impact,
             avg3Months,
             trend,
           }
         })
-        .filter(s => s.spent > 0 || s.budgeted > 0 || s.avg3Months > 0) // Include if active this month or historically
+        .filter(s => s.spent > 0) // Only show subcategories with actual expenses this month
         .sort((a, b) => b.spent - a.spent) // Sort by spending
 
       // Calculate category totals
@@ -184,7 +184,7 @@ export const useCategoryImpact = (
         spent: categorySpent,
         budgeted: categoryBudgeted,
         percentage,
-        isOverBudget: categoryBudgeted > 0 && categorySpent > categoryBudgeted,
+        isOverBudget: percentage > 105, // 5% tolerance
         impact,
         subcategories: subcategoryImpacts,
         topSubcategory: subcategoryImpacts[0], // Highest spending subcategory
@@ -192,7 +192,7 @@ export const useCategoryImpact = (
         trend: categoryTrend,
       }
     })
-      .filter(c => c.spent > 0 || c.budgeted > 0 || c.avg3Months > 0) // Include if active this month or historically
+      .filter(c => c.spent > 0) // Only show categories with actual expenses this month
       .sort((a, b) => b.spent - a.spent) // Sort by spending
 
     // Top spending categories (all that have spending)

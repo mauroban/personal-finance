@@ -33,7 +33,8 @@ export const YearlyCategoryTrends: React.FC<YearlyCategoryTrendsProps> = ({
       <div className="space-y-4">
         {yearlyGroupSummaries.map((group) => {
           const isExpanded = expandedCategory === group.groupId
-          const isOverBudget = group.totalActual > group.totalBudgeted
+          const percentage = group.totalBudgeted > 0 ? (group.totalActual / group.totalBudgeted) * 100 : 0
+          const isOverBudget = percentage > 105 // 5% tolerance
 
           return (
             <div
@@ -84,7 +85,7 @@ export const YearlyCategoryTrends: React.FC<YearlyCategoryTrendsProps> = ({
                   <div>
                     <p className="text-xs text-gray-600 dark:text-gray-400">Execução</p>
                     <p className={`text-sm font-medium ${
-                      group.averagePercentage > 100
+                      group.averagePercentage > 105
                         ? 'text-red-600 dark:text-red-400'
                         : 'text-green-600 dark:text-green-400'
                     }`}>
@@ -97,7 +98,7 @@ export const YearlyCategoryTrends: React.FC<YearlyCategoryTrendsProps> = ({
                 <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
                   <div
                     className={`h-2 rounded-full transition-all ${
-                      group.averagePercentage > 100
+                      group.averagePercentage > 105
                         ? 'bg-red-600 dark:bg-red-500'
                         : 'bg-green-600 dark:bg-green-500'
                     }`}
@@ -158,7 +159,7 @@ export const YearlyCategoryTrends: React.FC<YearlyCategoryTrendsProps> = ({
                                 {formatCurrency(variance)}
                               </td>
                               <td className={`px-4 py-2 text-sm text-right ${
-                                percentage > 100
+                                percentage > 105
                                   ? 'text-red-600 dark:text-red-400'
                                   : 'text-green-600 dark:text-green-400'
                               }`}>

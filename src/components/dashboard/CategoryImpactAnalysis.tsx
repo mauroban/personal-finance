@@ -215,10 +215,10 @@ export const CategoryImpactAnalysis: React.FC<CategoryImpactAnalysisProps> = ({
                             <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2 mb-1">
                               <div
                                 className={`h-2 rounded-full transition-all ${
-                                  category.isOverBudget
+                                  category.percentage > 105
                                     ? 'bg-red-500'
-                                    : category.percentage >= 80
-                                    ? 'bg-amber-500'
+                                    : category.percentage >= 85
+                                    ? 'bg-lime-500'
                                     : 'bg-green-500'
                                 }`}
                                 style={{ width: `${Math.min(category.percentage, 100)}%` }}

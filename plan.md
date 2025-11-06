@@ -1,1229 +1,528 @@
-# Dashboard Redesign Plan
+# Personal Finance App - Comprehensive Overhaul Plan
 
-## 1. Overview & Goals
-
-### Current State
-The dashboard has two main views (Monthly and Yearly) with various components showing income, expenses, budgets, and category breakdowns. While functional, the interface could be more organized, cleaner, and provide better insights into financial performance.
-
-### Goals
-Transform the dashboard into a **modern, clean, and highly informative financial command center** that:
-- Provides instant clarity on budget performance
-- Shows trends and patterns across time periods (Monthly, Yearly, YTD)
-- Enables easy comparison between planned vs. actual
-- Highlights savings progress and adherence to financial goals
-- Uses whitespace effectively while maximizing information density
-- Provides multiple focused views instead of overwhelming single pages
-
-### Success Criteria
-- Users can answer "How am I doing financially?" within 5 seconds
-- Clear visual hierarchy guides attention to most important metrics
-- Beautiful, modern design that feels premium and trustworthy
-- Responsive design works perfectly on mobile and desktop
-- Interactive elements provide deeper insights on demand
+**Generated**: 2025-11-06
+**Scope**: Fix all 33 identified issues (Critical + Important + Minor)
 
 ---
 
-## 2. New Dashboard Architecture
+## AUDIT SUMMARY
 
-### Multi-View Navigation System
-Instead of just Monthly/Yearly toggle, implement a **tab-based navigation** with 4 main views:
-
-```
-┌─────────────────────────────────────────────────────────┐
-│  Dashboard                                              │
-├─────────────────────────────────────────────────────────┤
-│  [Overview] [Month] [Year] [Trends]                    │
-│                                                         │
-│  Content area specific to selected tab                 │
-│                                                         │
-└─────────────────────────────────────────────────────────┘
-```
-
-### View Breakdown
-
-#### 1. **Overview Tab** (NEW) - Financial Health at a Glance
-- **Purpose**: Instant snapshot of overall financial health
-- **Key Metrics**:
-  - Hero card: YTD savings vs. goal
-  - Current month performance summary
-  - Year progress indicator
-  - Quick wins and alerts
-  - Top spending categories this month
-  - Recent trend (last 3 months mini-sparkline)
-
-#### 2. **Month Tab** (Enhanced) - Deep Dive into Current/Selected Month
-- **Purpose**: Detailed monthly budget execution
-- **Components**:
-  - Month selector (with quick jump to current)
-  - Income vs. Budget card
-  - Expenses vs. Budget card
-  - Net Balance card
-  - Category-by-category breakdown with progress bars
-  - Visual charts (pie chart for expense distribution, bar chart for comparison)
-  - Transaction summary (top 5 largest expenses)
-
-#### 3. **Year Tab** (Enhanced) - Annual Performance
-- **Purpose**: Yearly budget overview and monthly comparison
-- **Components**:
-  - Year selector
-  - Annual summary cards (total income, expenses, savings, savings rate)
-  - 12-month grid/heatmap showing performance
-  - Monthly trend line chart (income vs. expense over 12 months)
-  - Category performance table (which categories are on/off budget)
-  - Best/worst months analysis
-
-#### 4. **Trends Tab** (NEW) - Historical Analysis & Insights
-- **Purpose**: Understand spending patterns and trends
-- **Components**:
-  - Time period selector (Last 3 months, Last 6 months, Last 12 months, Custom)
-  - Category trend analysis (spending over time by category)
-  - Variance analysis (how actual vs. budget has changed)
-  - Seasonal patterns (if data available)
-  - Savings rate trend
-  - Budget adherence score over time
+### Issues Found: 33 Total
+- **5 Critical**: Build failures, test failures, blocking bugs
+- **16 Important**: UX, accessibility, performance, documentation
+- **12 Minor**: Documentation mismatches, optimizations, cleanup
 
 ---
 
-## 3. Detailed Page Specifications
+## DETAILED ISSUE LIST
 
-### 3.1 Overview Tab
+### 1. CRITICAL ISSUES (5)
 
-#### Layout Structure
-```
-┌────────────────────────────────────────────────────────┐
-│  Year-to-Date Progress (Hero Section)                 │
-│  ┌──────────────────────────────────────────────────┐ │
-│  │  YTD Savings: R$ XX,XXX / R$ YY,YYY (ZZ%)      │ │
-│  │  Progress bar                                    │ │
-│  └──────────────────────────────────────────────────┘ │
-│                                                        │
-│  Current Month Snapshot                                │
-│  ┌─────────┐ ┌─────────┐ ┌─────────┐                 │
-│  │ Income  │ │ Expense │ │ Balance │                 │
-│  │ R$ X,XX │ │ R$ Y,YY │ │ R$ Z,ZZ │                 │
-│  │ XX% ✓   │ │ YY% ⚠   │ │ +/-     │                 │
-│  └─────────┘ └─────────┘ └─────────┘                 │
-│                                                        │
-│  Quick Insights (2-column grid)                        │
-│  ┌──────────────────┐ ┌──────────────────┐           │
-│  │ Top Categories   │ │ Recent Trend     │           │
-│  │ • Alimentação    │ │ [Sparkline]      │           │
-│  │   R$ X,XXX       │ │ Last 3 months    │           │
-│  │ • Transporte     │ │ improving ↗      │           │
-│  │   R$ Y,YYY       │ │                  │           │
-│  └──────────────────┘ └──────────────────┘           │
-│                                                        │
-│  Alerts & Recommendations                              │
-│  ┌────────────────────────────────────────────────┐   │
-│  │ ⚠ Alimentação: 85% of budget used (15 days)  │   │
-│  │ ✓ On track to save R$ X,XXX this year         │   │
-│  └────────────────────────────────────────────────┘   │
-└────────────────────────────────────────────────────────┘
-```
+#### 1.1 TypeScript Build Failure
+- **File**: `tsconfig.json`
+- **Issue**: Missing vitest type definitions causing build to fail
+- **Error**: Test files can't find `describe`, `it`, `expect` globals
+- **Fix**: Add `"types": ["vitest/globals"]` to compilerOptions
 
-#### Key Features
-- **YTD Progress Hero**: Large, prominent card showing year-to-date savings progress
-- **Current Month Mini-Cards**: Compact 3-card layout with key metrics and status indicators
-- **Top Categories**: Shows top 5 spending categories for current month with amounts
-- **Recent Trend**: Mini sparkline chart showing last 3 months' net balance trend
-- **Smart Alerts**: Contextual warnings (over budget) and encouragements (on track)
-- **Quick Actions**: "View Detailed Month" button to jump to Month tab
+#### 1.2 Date Calculation Bug
+- **File**: `src/utils/date.ts:74-78`
+- **Function**: `monthNumberToDate`
+- **Issue**: Off-by-one error in year calculation
+- **Example**: monthNum=24288 (2024*12) returns {year: 2024, month: 12} instead of {year: 2023, month: 12}
+- **Fix**: Change `Math.floor(monthNum / 12)` to `Math.floor((monthNum - 1) / 12)`
 
-#### Data Requirements
-- YTD calculations for income, expenses, savings
-- Current month summary (reuse existing `useBudgetCalculations`)
-- Top N categories by spending for current month
-- Last 3 months' net balance for trend
-- Budget adherence checks for alerts
+#### 1.3 Test Failures (6 tests)
+- **File**: `src/hooks/__tests__/useTrendCalculations.test.ts`
+  - Line 238: `periodSummary` returns 0 for totalExpense (expected non-zero)
+  - Line 255: `varianceTrend` returns 6 months instead of 12 for monthsBack=12
+  - Line 282: Cross-year periods return 1 month instead of 2
+  - **Root cause**: Lines 71-87 in useTrendCalculations.ts filter out empty months
+
+- **File**: `src/hooks/__tests__/useYearlyCalculations.test.ts`
+  - Line 107: `monthlyBreakdowns` returns 3 months instead of 12
+  - Line 133: Undefined access when checking empty month
+  - Line 163: `isFuture` flag incorrectly set for past months
+  - **Root cause**: Lines 71-74 skip empty months without data/budgets
+
+#### 1.4 No Component/Integration Tests
+- **Files**: No test coverage for critical components
+- **Missing tests**:
+  - TransactionForm (validation, installments, submission)
+  - BudgetEditor (CRUD operations, recurrent budgets)
+  - CategoryManager (expand/collapse, CRUD)
+  - Modal (keyboard, focus, accessibility)
+  - ErrorBoundary (error handling)
+  - Integration tests for user flows
+
+#### 1.5 Navbar Import No Loading State
+- **File**: `src/components/layout/Navbar.tsx:94-100`
+- **Issue**: File picker opens on every render when showImport is true
+- **Issue**: No loading indicator during import
+- **Issue**: Generic alert for errors (line 19) - no specific error message
 
 ---
 
-### 3.2 Month Tab (Enhanced)
+### 2. IMPORTANT ISSUES (16)
 
-#### Layout Structure
-```
-┌────────────────────────────────────────────────────────┐
-│  Month Selector: [< Janeiro 2025 >] [Today]           │
-│                                                        │
-│  Performance Summary (3-column)                        │
-│  ┌─────────────┐ ┌─────────────┐ ┌─────────────┐     │
-│  │ Receitas    │ │ Despesas    │ │ Saldo       │     │
-│  │ Previsto    │ │ Previsto    │ │             │     │
-│  │ R$ X,XXX    │ │ R$ Y,YYY    │ │ R$ Z,ZZZ    │     │
-│  │ Realizado   │ │ Realizado   │ │             │     │
-│  │ R$ XX,XX    │ │ R$ YY,YY    │ │ +/- X%      │     │
-│  │ [Progress]  │ │ [Progress]  │ │             │     │
-│  └─────────────┘ └─────────────┘ └─────────────┘     │
-│                                                        │
-│  Visual Comparison (2-column charts)                   │
-│  ┌──────────────────┐ ┌──────────────────┐           │
-│  │ Budget vs Actual │ │ Expense Dist.    │           │
-│  │ [Bar Chart]      │ │ [Donut Chart]    │           │
-│  └──────────────────┘ └──────────────────┘           │
-│                                                        │
-│  Category Breakdown                                    │
-│  ┌────────────────────────────────────────────────┐   │
-│  │ Category          Budget    Actual    Status   │   │
-│  │ ─────────────────────────────────────────────  │   │
-│  │ 🏠 Moradia        R$ 2,000  R$ 1,850  [████░] │   │
-│  │ 🚗 Transporte     R$ 1,000  R$ 1,200  [█████]⚠│   │
-│  │ 🍔 Alimentação    R$ 1,500  R$ 1,400  [████░] │   │
-│  │ ...                                            │   │
-│  └────────────────────────────────────────────────┘   │
-│                                                        │
-│  Top Transactions                                      │
-│  ┌────────────────────────────────────────────────┐   │
-│  │ 5 maiores despesas do mês                      │   │
-│  │ • Aluguel - R$ 1,500 - 01/01                   │   │
-│  │ • Supermercado - R$ 450 - 15/01                │   │
-│  └────────────────────────────────────────────────┘   │
-└────────────────────────────────────────────────────────┘
-```
+#### 2.1 Documentation Inconsistencies
 
-#### Key Features
-- **Enhanced Month Selector**: Prev/next arrows + "Today" quick button
-- **Larger Summary Cards**: More prominent display with better visual hierarchy
-- **Dual Chart View**: Side-by-side comparison chart and distribution chart
-- **Interactive Category Rows**: Click to expand and see subcategory breakdown
-- **Status Indicators**: Clear visual indicators (✓ under budget, ⚠ approaching, ⚠ over)
-- **Top Transactions**: Shows 5 largest expenses to provide context
-- **Clean Design**: More whitespace, larger fonts, better color coding
+**README.md vs Code**:
+- README mentions "Yearly Planning" but code uses inconsistent "Yearly" vs "Anual" terminology
+- ViewMode constants changed: README implies 'monthly'/'yearly', but code uses VIEW_MODES.MONTH/VIEW_MODES.YEAR/VIEW_MODES.OVERVIEW/VIEW_MODES.TRENDS
+- Dashboard 4-tab system not documented in README
 
-#### Component Changes
-- Enhance `SummaryCard` component with better styling and animations
-- Update `GroupBreakdown` with collapsible subcategories
-- Create new `TopTransactions` component
-- Improve chart components with better colors and labels
+**docs/product-context.md**:
+- Line 72: States "4 default income sources" (matches defaultData.ts)
+- Dashboard description doesn't mention 4-tab system (Overview, Month, Year, Trends)
+- Cash register input feature (lines 102-106) not mentioned in product overview
 
----
+**docs/technical-context.md**:
+- Line 59: Lists "InstallmentHandler.tsx" component that doesn't exist
 
-### 3.3 Year Tab (Enhanced)
+#### 2.2 Console.error in Production
+- **File**: `src/components/common/ErrorBoundary.tsx:47`
+- **Fix**: Add environment check: `if (import.meta.env.DEV) console.error(...)`
 
-#### Layout Structure
-```
-┌────────────────────────────────────────────────────────┐
-│  Year Selector: [< 2025 >]                             │
-│                                                        │
-│  Annual Summary (4-column)                             │
-│  ┌──────┐ ┌──────┐ ┌──────┐ ┌──────────┐             │
-│  │Income│ │Expense│ │Balance│ │ Savings  │             │
-│  │R$ XXX│ │R$ YYY │ │R$ ZZZ │ │ Rate: XX%│             │
-│  └──────┘ └──────┘ └──────┘ └──────────┘             │
-│                                                        │
-│  Monthly Performance Grid                              │
-│  ┌────────────────────────────────────────────────┐   │
-│  │ Month     Income    Expense   Balance   Status │   │
-│  │ ─────────────────────────────────────────────  │   │
-│  │ Jan       R$ X,XXX  R$ Y,YYY  R$ Z,ZZZ  ✓     │   │
-│  │ Fev       R$ X,XXX  R$ Y,YYY  R$ Z,ZZZ  ⚠     │   │
-│  │ Mar       R$ X,XXX  R$ Y,YYY  R$ Z,ZZZ  ✓     │   │
-│  │ ...                                            │   │
-│  │ [Click any month to drill down]                │   │
-│  └────────────────────────────────────────────────┘   │
-│                                                        │
-│  Trend Visualization                                   │
-│  ┌────────────────────────────────────────────────┐   │
-│  │ Income & Expense Trend                         │   │
-│  │ [Line Chart showing both over 12 months]       │   │
-│  └────────────────────────────────────────────────┘   │
-│                                                        │
-│  Category Annual Performance                           │
-│  ┌────────────────────────────────────────────────┐   │
-│  │ Category    Budgeted    Actual    Variance     │   │
-│  │ ──────────────────────────────────────────────│   │
-│  │ Moradia     R$ 24,000   R$ 22,800  -R$ 1,200✓│   │
-│  │ Transporte  R$ 12,000   R$ 13,500  +R$ 1,500⚠│   │
-│  └────────────────────────────────────────────────┘   │
-└────────────────────────────────────────────────────────┘
-```
+#### 2.3 Incomplete Error Handling
+- **File**: `src/components/layout/Navbar.tsx:19`
+- **Issue**: Generic alert doesn't show specific error message
+- **Fix**: Display `error.message` to user
 
-#### Key Features
-- **Compact Annual Summary**: 4 key metrics in a row
-- **Interactive Monthly Grid**: Click any month to jump to Month tab for that period
-- **Dual-Axis Line Chart**: Shows income and expense trends together
-- **Category Annual Summary**: Year totals by category with variance
-- **Performance Heatmap Option**: Consider adding a heatmap view showing good/bad months
-- **Export Option**: "Export Annual Report" button
+#### 2.4 Inconsistent Alert/Confirm Usage (8 files)
+- Uses blocking window.alert() and window.confirm()
+- **Files to update**:
+  - Navbar.tsx
+  - TransactionForm.tsx
+  - TransactionList.tsx
+  - CategoryManager.tsx
+  - SourceManager.tsx
+  - useBackup.ts
+  - DatabaseReset.tsx
+- **Fix**: Create reusable ConfirmModal and AlertModal components
 
-#### Component Changes
-- Simplify `YearlySummary` component - make it more compact
-- Enhance `MonthlyBreakdownTable` with better interactivity
-- Update `MonthlyTrendChart` to show both income and expenses
-- Refactor `YearlyCategoryTrends` for cleaner presentation
+#### 2.5 Missing Empty States
+- **BudgetEditor.tsx**: No guidance when no categories exist
+- **Dashboard tabs**: No empty state for Overview and Trends tabs
+- **Note**: TransactionList.tsx has good empty state (line 127) - use as reference
+
+#### 2.6 Missing Error States
+- No error boundary around individual pages
+- Database errors in AppContext (line 102) logged but not shown to user
+- Export/Import failures show alerts instead of proper error UI
+
+#### 2.7 Poor Mobile Responsiveness
+- **TransactionList.tsx:42**: Wide table with no horizontal scroll or responsive layout
+- **BudgetEditor.tsx**: Complex nested inputs don't adapt to mobile (600+ lines)
+- **Dashboard tabs**: No mobile optimization
+- **Fix**: Create responsive card layouts for mobile, stack inputs vertically
+
+#### 2.8 Accessibility Issues
+- **Buttons missing aria-label**: Modal close button (Modal.tsx:57), delete buttons throughout
+- **Modal**: Missing aria-modal and role="dialog" attributes
+- **No focus management**: Modal doesn't trap focus or return focus on close
+- **TabNavigation** (src/components/dashboard/TabNavigation.tsx): Doesn't use proper ARIA tab pattern
+- **Form validation**: Errors not announced to screen readers (no aria-live regions)
+- **Only 14 aria attributes** in entire codebase
+
+#### 2.9 Form Validation Issues
+- **TransactionForm.tsx**: Lines 50, 55, 59, 64 use alert() for validation errors
+- **Fix**: Replace with inline error messages below form fields
+- **BudgetEditor.tsx**: No validation for negative values
+- No visual indication of required fields before submission
+
+#### 2.10 Missing Memoization
+- **TransactionList.tsx**: getCategoryName (line 16) and getSourceName (line 28) recreated on every render
+- **Fix**: Use useCallback to memoize these functions
+
+#### 2.11 Expensive Re-renders
+- **BudgetEditor.tsx** (640 lines): Re-renders on every keystroke
+- Lines 24-93: useEffect with large dependency array causes frequent recalculations
+- **Fix**: Split into smaller components (IncomeSection, ExpenseSection, CategoryRow)
+
+#### 2.12 No Virtualization
+- **TransactionList.tsx**: Renders all transactions without pagination
+- **YearlyCategoryTrends.tsx**: Renders all categories expanded
+- **Fix**: Implement react-window for lists with 100+ items
+
+#### 2.13 Budget Mode Inconsistency
+- Legacy `isRecurrent` field (Budget type line 39) still supported but deprecated
+- Some budgets have `mode: 'recurring'`, others have `isRecurrent: true`
+- Migration path not documented
+
+#### 2.14 Yearly View Calculation Gaps
+- **File**: `src/hooks/useYearlyCalculations.ts:71-74`
+- Skips empty months, creating gaps in monthly breakdown
+- Breaks chart displays
+- **Fix**: Always return 12 months, even if empty
+
+#### 2.15 Missing Loading States
+- useBackup hook tracks isExporting/isImporting but doesn't show spinner in UI
+- AppContext has isLoading but not used consistently
+
+#### 2.16 Missing Keyboard Navigation
+- BudgetEditor cash register input: No Enter/Tab support
+- CategoryManager expandable sections: No keyboard support
+- Modal closes on Escape (good!) but doesn't trap Tab key
 
 ---
 
-### 3.4 Trends Tab (NEW)
+### 3. MINOR ISSUES (12)
 
-#### Layout Structure
-```
-┌────────────────────────────────────────────────────────┐
-│  Time Period: [Last 3M] [Last 6M] [Last 12M] [Custom] │
-│                                                        │
-│  Trend Metrics (3-column)                              │
-│  ┌──────────────┐ ┌──────────────┐ ┌─────────────┐   │
-│  │ Avg Monthly  │ │ Budget       │ │ Savings     │   │
-│  │ Savings      │ │ Adherence    │ │ Trend       │   │
-│  │ R$ X,XXX     │ │ XX%          │ │ [Sparkline] │   │
-│  │ +X% vs prev  │ │ Improving ✓  │ │ +X% MoM     │   │
-│  └──────────────┘ └──────────────┘ └─────────────┘   │
-│                                                        │
-│  Category Spending Trends                              │
-│  ┌────────────────────────────────────────────────┐   │
-│  │ [Multi-line chart showing top 5 categories]    │   │
-│  │ Shows spending evolution over selected period  │   │
-│  └────────────────────────────────────────────────┘   │
-│                                                        │
-│  Budget vs Actual Variance                             │
-│  ┌────────────────────────────────────────────────┐   │
-│  │ [Area chart showing variance over time]        │   │
-│  │ Positive area = under budget, Negative = over  │   │
-│  └────────────────────────────────────────────────┘   │
-│                                                        │
-│  Insights & Patterns                                   │
-│  ┌────────────────────────────────────────────────┐   │
-│  │ • Spending on "Alimentação" increased 15%      │   │
-│  │ • You saved more than planned 3/6 months       │   │
-│  │ • Best month: Janeiro (R$ 2,500 saved)         │   │
-│  └────────────────────────────────────────────────┘   │
-└────────────────────────────────────────────────────────┘
-```
+#### 3.1 Unused Parameters
+- GroupBreakdown.tsx line 105: Receives both `summaries` and `summariesWithSubcategories`, only uses latter
+- Multiple components have unused props
 
-#### Key Features
-- **Time Period Selector**: Quick filters for common periods
-- **Trend KPIs**: High-level metrics with comparison to previous period
-- **Multi-Category Line Chart**: Shows spending evolution for top categories
-- **Variance Area Chart**: Visualizes budget adherence over time
-- **AI-like Insights**: Automatically generated observations about patterns
-- **Comparative Analysis**: Month-over-month and period-over-period changes
+#### 3.2 Magic Numbers
+- BudgetEditor.tsx lines 107-109: Hardcoded currency formatting
+- useTrendCalculations.ts line 187: Hardcoded 10% threshold
+- useTrendCalculations.ts line 216: Hardcoded adherence score (50-100 scale)
+- **Fix**: Extract to constants file
 
-#### Data Requirements
-- New hook: `useTrendCalculations(transactions, budgets, startDate, endDate)`
-- Calculate period-over-period changes
-- Identify top spending categories
-- Calculate variance trends
-- Generate pattern insights
+#### 3.3 Incomplete TODOs
+- ErrorBoundary.tsx line 54: "TODO: Send error to logging service"
+- logger.ts line 39: "TODO: Implement integration with logging service"
+
+#### 3.4 No Bundle Size Analysis
+- No script in package.json for bundle analysis
+- Recharts is large (~400KB) and imported in 5+ files
+- **Fix**: Add bundle analysis script, implement dynamic imports for charts
+
+#### 3.5 Database Query Optimization
+- AppContext loads all data on mount (lines 93-97) even if not needed
+- BudgetEditor queries budgets array multiple times (lines 31-93)
+- Should use Dexie compound indexes
+
+#### 3.6 Transaction Installment Identification
+- No way to identify related installment transactions
+- No parent transaction ID linking installments together
+
+#### 3.7 No Data Sanitization
+- importData validates structure but not content
+- Malicious JSON could include XSS payloads
+- **Fix**: Sanitize all string fields after import
+
+#### 3.8-3.12 Other Minor Issues
+- Documentation folder structure mismatch
+- XSS protection not comprehensive
+- Missing timezone handling tests
+- Legacy code comments
+- Inconsistent code formatting
 
 ---
 
-## 4. Component Architecture
+## EXECUTION PLAN (42 Tasks)
 
-### New Components to Create
+### Phase 1: Critical Fixes (Build & Tests)
+**Priority**: Must complete first - blocks everything else
 
-#### 4.1 `TabNavigation.tsx`
-```typescript
-interface Tab {
-  id: string
-  label: string
-  icon?: React.ReactNode
-}
+1. **Fix TypeScript build failure**
+   - File: `tsconfig.json`
+   - Action: Add `"types": ["vitest/globals"]` to compilerOptions
 
-interface TabNavigationProps {
-  tabs: Tab[]
-  activeTab: string
-  onTabChange: (tabId: string) => void
-}
-```
-- Horizontal tab bar with smooth transition
-- Active state indicator (underline or background)
-- Responsive: becomes dropdown on mobile
+2. **Fix monthNumberToDate bug**
+   - File: `src/utils/date.ts:74-78`
+   - Action: Change `Math.floor(monthNum / 12)` to `Math.floor((monthNum - 1) / 12)`
 
-#### 4.2 `HeroCard.tsx`
-```typescript
-interface HeroCardProps {
-  title: string
-  value: number
-  target: number
-  percentage: number
-  trend?: 'up' | 'down' | 'neutral'
-  subtitle?: string
-}
-```
-- Large, prominent card for key metrics
-- Progress bar with gradient
-- Trend indicator with icon
+3. **Fix useTrendCalculations test failures**
+   - File: `src/hooks/useTrendCalculations.ts:71-87`
+   - Action: Don't filter out empty months, return all months in range
 
-#### 4.3 `MetricCard.tsx`
-```typescript
-interface MetricCardProps {
-  label: string
-  value: number | string
-  sublabel?: string
-  status?: 'positive' | 'negative' | 'neutral'
-  icon?: React.ReactNode
-  size?: 'small' | 'medium' | 'large'
-}
-```
-- Flexible card for displaying single metrics
-- Size variants for different contexts
-- Status-based color coding
+4. **Fix useYearlyCalculations test failures**
+   - File: `src/hooks/useYearlyCalculations.ts:71-74`
+   - Action: Always return 12 months, include empty months
 
-#### 4.4 `TopTransactions.tsx`
-```typescript
-interface TopTransactionsProps {
-  transactions: Transaction[]
-  limit?: number
-  type?: 'expense' | 'earning'
-}
-```
-- Shows top N transactions
-- Displays category icon, name, amount, date
-- Click to see transaction details
+5. **Remove console.error from production**
+   - File: `src/components/common/ErrorBoundary.tsx:47`
+   - Action: Add `if (import.meta.env.DEV)` check
 
-#### 4.5 `TrendSparkline.tsx`
-```typescript
-interface TrendSparklineProps {
-  data: number[]
-  trend: 'up' | 'down' | 'neutral'
-  color?: string
-}
-```
-- Mini line chart for trends
-- Compact size for inline use
-- Shows directional trend
+6. **Improve Navbar error handling**
+   - File: `src/components/layout/Navbar.tsx:19`
+   - Action: Show specific error message in alert or modal
 
-#### 4.6 `AlertBanner.tsx`
-```typescript
-interface Alert {
-  type: 'warning' | 'success' | 'info'
-  message: string
-  action?: {
-    label: string
-    onClick: () => void
-  }
-}
+### Phase 2: Code Quality (4 tasks)
 
-interface AlertBannerProps {
-  alerts: Alert[]
-}
-```
-- Displays contextual alerts and recommendations
-- Dismissible
-- Action button support
+7. **Create constants file**
+   - File: `src/constants/formatting.ts` (new)
+   - Action: Extract magic numbers for currency, thresholds, etc.
 
-#### 4.7 `CategoryProgressRow.tsx`
-```typescript
-interface CategoryProgressRowProps {
-  category: GroupSummary
-  isExpandable?: boolean
-  onExpand?: () => void
-  subcategories?: SubcategorySummary[]
-}
-```
-- Enhanced row with better visuals
-- Collapsible for subcategories
-- Status indicators and icons
+8. **Remove unused parameters**
+   - Files: Multiple components
+   - Action: Remove or use unused props, fix TypeScript warnings
 
-#### 4.8 `PeriodSelector.tsx` (Enhanced)
-- Add "Today" quick button
-- Better mobile layout
-- Preset date ranges
+9. **Add data sanitization**
+   - File: `src/utils/exportImport.ts`
+   - Action: Sanitize all string fields on import using DOMPurify
 
-#### 4.9 `PerformanceHeatmap.tsx`
-```typescript
-interface PerformanceHeatmapProps {
-  data: {
-    month: number
-    value: number
-  }[]
-  thresholds: {
-    good: number
-    medium: number
-  }
-}
-```
-- Calendar-style heatmap for 12 months
-- Color-coded by performance
-- Hover shows details
+10. **Update documentation**
+    - Files: README.md, docs/product-context.md, docs/technical-context.md
+    - Action: Update to match current implementation (4-tab dashboard, view modes, etc.)
 
-#### 4.10 `InsightsList.tsx`
-```typescript
-interface Insight {
-  type: 'observation' | 'recommendation'
-  message: string
-  icon?: React.ReactNode
-}
+### Phase 3: UX Improvements (6 tasks)
 
-interface InsightsListProps {
-  insights: Insight[]
-}
-```
-- Displays automatically generated insights
-- Icon-based visual hierarchy
+11. **Create ConfirmModal component**
+    - File: `src/components/common/ConfirmModal.tsx` (new)
+    - Action: Reusable confirmation dialog with title, message, confirm/cancel buttons
 
-### Components to Enhance
+12. **Create AlertModal component**
+    - File: `src/components/common/AlertModal.tsx` (new)
+    - Action: Reusable alert dialog with title, message, OK button
 
-1. **SummaryCard.tsx**: Larger text, better progress bars, animations
-2. **GroupBreakdown.tsx**: Add expand/collapse, better status indicators
-3. **YearlySummary.tsx**: More compact, cleaner layout
-4. **MonthlyBreakdownTable.tsx**: Better interactivity, hover states
-5. **Charts**: Consistent color scheme, better labels, tooltips
+13. **Replace all window.alert/confirm calls**
+    - Files: 8 files (Navbar, TransactionForm, TransactionList, CategoryManager, SourceManager, useBackup, DatabaseReset)
+    - Action: Replace with ConfirmModal/AlertModal components
 
----
+14. **Add loading states**
+    - File: `src/components/layout/Navbar.tsx`
+    - Action: Show spinner during import/export operations
 
-## 5. Design System Enhancements
+15. **Add empty states**
+    - Files: BudgetEditor.tsx, Dashboard Overview tab, Dashboard Trends tab
+    - Action: Show helpful messages when no data exists
 
-### Color Semantics
-```typescript
-// Status Colors
-const statusColors = {
-  excellent: colors.success[600],    // Over-saved, ahead of budget
-  good: colors.success[400],         // On track
-  warning: colors.warning[500],      // Approaching limit (>80%)
-  danger: colors.error[500],         // Over budget
-  neutral: colors.neutral[400],      // No budget/data
-}
-```
+16. **Add inline form validation**
+    - File: `src/components/transactions/TransactionForm.tsx`
+    - Action: Replace alerts with inline error messages, add field-level validation
 
-### Typography Scale
-```typescript
-// Dashboard-specific text sizes
-const dashboardTypography = {
-  heroValue: '3.75rem',     // 60px - for main YTD savings
-  cardValue: '2.25rem',     // 36px - for summary cards
-  metricValue: '1.5rem',    // 24px - for smaller metrics
-  label: '0.875rem',        // 14px - for labels
-  sublabel: '0.75rem',      // 12px - for subtexts
-}
-```
+### Phase 4: Accessibility (6 tasks)
 
-### Spacing & Layout
-- **Generous whitespace**: Minimum 24px between major sections
-- **Card padding**: 24px (increased from current 16px)
-- **Grid gaps**: 24px for major grids, 16px for compact grids
-- **Max content width**: 1400px for better readability
+17. **Add ARIA labels to buttons**
+    - Files: Modal.tsx, delete buttons throughout app
+    - Action: Add aria-label to all icon buttons and interactive elements
 
-### Visual Hierarchy Rules
-1. **Primary metrics** (hero values): 60px font, bold, primary color
-2. **Secondary metrics** (cards): 36px font, semibold, contextual color
-3. **Tertiary metrics** (table values): 24px font, medium, gray
-4. **Labels**: 14px font, medium, gray-600
-5. **Sublabels**: 12px font, normal, gray-500
+18. **Implement Modal focus management**
+    - File: `src/components/common/Modal.tsx`
+    - Action: Trap focus, return focus on close, add aria-modal and role="dialog"
 
-### Animations & Transitions
-```typescript
-const dashboardAnimations = {
-  tabSwitch: {
-    duration: '300ms',
-    easing: 'cubic-bezier(0.4, 0, 0.2, 1)',
-  },
-  cardHover: {
-    transform: 'translateY(-2px)',
-    shadow: shadows.lg,
-    duration: '200ms',
-  },
-  progressBar: {
-    duration: '800ms',
-    easing: 'cubic-bezier(0.4, 0, 0.2, 1)',
-  },
-  numberCounter: {
-    duration: '1000ms',
-    easing: 'ease-out',
-  },
-}
-```
+19. **Fix TabNavigation ARIA pattern**
+    - File: `src/components/dashboard/TabNavigation.tsx`
+    - Action: Use proper role="tablist", role="tab", role="tabpanel", aria-selected
+
+20. **Add aria-live regions**
+    - Files: TransactionForm, BudgetEditor, any forms with validation
+    - Action: Announce validation errors to screen readers
+
+21. **Add keyboard navigation to expandable sections**
+    - Files: CategoryManager, BudgetEditor expandable rows
+    - Action: Support Enter/Space to expand/collapse, arrow keys to navigate
+
+22. **Comprehensive keyboard support**
+    - Files: Throughout app (Modal, forms, lists)
+    - Action: Ensure Enter/Tab/Escape work correctly, test with keyboard only
+
+### Phase 5: Mobile Responsiveness (4 tasks)
+
+23. **Make TransactionList responsive**
+    - File: `src/components/transactions/TransactionList.tsx`
+    - Action: Switch to card layout on mobile (<768px), stack information vertically
+
+24. **Optimize BudgetEditor for mobile**
+    - File: `src/components/budget/BudgetEditor.tsx`
+    - Action: Stack inputs vertically, increase touch targets, simplify layout
+
+25. **Make Dashboard tabs mobile-friendly**
+    - Files: Dashboard page, TabNavigation
+    - Action: Make tabs scrollable, add swipe gestures, optimize charts for small screens
+
+26. **Add responsive breakpoints**
+    - Files: All major layouts (Navbar, pages, cards)
+    - Action: Test and adjust layouts for mobile (320px), tablet (768px), desktop (1024px+)
+
+### Phase 6: Performance (6 tasks)
+
+27. **Memoize TransactionList callbacks**
+    - File: `src/components/transactions/TransactionList.tsx:16,28`
+    - Action: Wrap getCategoryName and getSourceName in useCallback
+
+28. **Split BudgetEditor into smaller components**
+    - File: `src/components/budget/BudgetEditor.tsx`
+    - Action: Extract IncomeSection, ExpenseSection, CategoryRow components
+
+29. **Add virtualization to TransactionList**
+    - File: `src/components/transactions/TransactionList.tsx`
+    - Action: Install react-window, implement virtual scrolling for 1000+ items
+
+30. **Add virtualization to YearlyCategoryTrends**
+    - File: `src/components/dashboard/YearlyCategoryTrends.tsx`
+    - Action: Implement virtual scrolling for category list
+
+31. **Implement dynamic imports for charts**
+    - Files: All files importing Recharts
+    - Action: Use React.lazy() to load charts on demand
+
+32. **Optimize database queries**
+    - File: `src/context/AppContext.tsx:93-97`
+    - Action: Lazy load data, add compound indexes to Dexie
+
+### Phase 7: Testing (6 tasks)
+
+33. **Add TransactionForm component tests**
+    - File: `src/components/transactions/__tests__/TransactionForm.test.tsx` (new)
+    - Test: Validation, installments creation, form submission, category/source selection
+
+34. **Add BudgetEditor component tests**
+    - File: `src/components/budget/__tests__/BudgetEditor.test.tsx` (new)
+    - Test: CRUD operations, recurrent budgets, category expansion, calculations
+
+35. **Add CategoryManager component tests**
+    - File: `src/components/setup/__tests__/CategoryManager.test.tsx` (new)
+    - Test: Expand/collapse, add/edit/delete categories, subcategory management
+
+36. **Add Modal component tests**
+    - File: `src/components/common/__tests__/Modal.test.tsx` (new)
+    - Test: Keyboard (Escape), focus management, accessibility attributes
+
+37. **Add ErrorBoundary tests**
+    - File: `src/components/common/__tests__/ErrorBoundary.test.tsx` (new)
+    - Test: Error catching, fallback UI, reset functionality
+
+38. **Add integration tests**
+    - Files: `src/__tests__/integration/*.test.tsx` (new)
+    - Test: Complete user flows (add transaction → view dashboard, create budget → add expenses)
+
+### Phase 8: Final Polish (4 tasks)
+
+39. **Add bundle size analysis**
+    - File: `package.json`
+    - Action: Add script for bundle analysis (e.g., `npm run analyze`)
+
+40. **Remove legacy budget mode field**
+    - Files: Budget type definition, all components using isRecurrent
+    - Action: Migrate all budgets to use mode field, remove isRecurrent support
+
+41. **Add parent transaction ID to installments**
+    - Files: Transaction type, TransactionForm, transaction creation logic
+    - Action: Link installment transactions with parent ID for tracking
+
+42. **Verify yearly view returns 12 months**
+    - File: `src/hooks/useYearlyCalculations.ts`
+    - Action: Ensure all months present even if empty (fixes chart gaps)
 
 ---
 
-## 6. Data Calculations & Hooks
+## EXECUTION NOTES
 
-### New Hooks to Create
+### Files to Create (New)
+1. `src/constants/formatting.ts` - Currency, thresholds, etc.
+2. `src/components/common/ConfirmModal.tsx` - Confirmation dialog
+3. `src/components/common/AlertModal.tsx` - Alert dialog
+4. `src/components/transactions/__tests__/TransactionForm.test.tsx`
+5. `src/components/budget/__tests__/BudgetEditor.test.tsx`
+6. `src/components/setup/__tests__/CategoryManager.test.tsx`
+7. `src/components/common/__tests__/Modal.test.tsx`
+8. `src/components/common/__tests__/ErrorBoundary.test.tsx`
+9. `src/__tests__/integration/` - Directory for integration tests
 
-#### 6.1 `useYTDCalculations.ts`
-```typescript
-interface YTDSummary {
-  totalIncome: number
-  totalExpense: number
-  totalSavings: number
-  budgetedSavings: number
-  savingsPercentage: number
-  savingsRate: number // Savings as % of income
-  monthsCompleted: number
-}
+### Files to Modify (Major Changes)
+1. `tsconfig.json` - Add vitest types
+2. `src/utils/date.ts` - Fix monthNumberToDate
+3. `src/hooks/useTrendCalculations.ts` - Don't filter empty months
+4. `src/hooks/useYearlyCalculations.ts` - Return all 12 months
+5. `src/components/budget/BudgetEditor.tsx` - Split into smaller components, add mobile support
+6. `src/components/transactions/TransactionList.tsx` - Responsive layout, virtualization
+7. `src/components/layout/Navbar.tsx` - Replace alerts, add loading states
+8. `src/components/common/Modal.tsx` - Focus management, ARIA attributes
+9. `src/components/dashboard/TabNavigation.tsx` - Proper ARIA tab pattern
+10. `src/components/transactions/TransactionForm.tsx` - Inline validation
 
-export const useYTDCalculations = (
-  transactions: Transaction[],
-  budgets: Budget[],
-  year: number,
-  currentMonth: number
-): YTDSummary
+### Dependencies to Install
+```bash
+npm install react-window @types/react-window
+npm install -D @vitest/ui # Optional: Better test UI
 ```
 
-#### 6.2 `useTrendCalculations.ts`
-```typescript
-interface TrendData {
-  categoryTrends: {
-    categoryId: number
-    categoryName: string
-    data: { month: string; value: number }[]
-  }[]
-  varianceTrend: { month: string; variance: number }[]
-  savingsTrend: { month: string; savings: number }[]
-  budgetAdherence: number // 0-100 score
-  insights: Insight[]
-}
+### Testing Strategy
+1. Fix existing tests first (Phase 1)
+2. Run `npm test` after each phase to ensure no regressions
+3. Add component tests (Phase 7) with focus on user interactions
+4. Add integration tests last to verify complete flows
 
-export const useTrendCalculations = (
-  transactions: Transaction[],
-  budgets: Budget[],
-  categories: Category[],
-  startDate: string,
-  endDate: string
-): TrendData
-```
+### Mobile Testing
+- Test on Chrome DevTools device emulation (iPhone, iPad, Android)
+- Key breakpoints: 320px (mobile), 768px (tablet), 1024px+ (desktop)
+- Test touch interactions (tap targets min 44px)
 
-#### 6.3 `useTopTransactions.ts`
-```typescript
-export const useTopTransactions = (
-  transactions: Transaction[],
-  year: number,
-  month: number,
-  type: 'expense' | 'earning',
-  limit: number = 5
-): Transaction[]
-```
-
-#### 6.4 `useAlerts.ts`
-```typescript
-interface Alert {
-  type: 'warning' | 'success' | 'info'
-  message: string
-  category?: string
-  action?: {
-    label: string
-    route: string
-  }
-}
-
-export const useAlerts = (
-  transactions: Transaction[],
-  budgets: Budget[],
-  categories: Category[],
-  year: number,
-  month: number
-): Alert[]
-```
-Logic for generating alerts:
-- Categories over 80% of budget: Warning
-- Categories over 100% of budget: Danger
-- On track to meet savings goal: Success
-- Best performing category: Success
-
-#### 6.5 `usePerformanceScore.ts`
-```typescript
-interface PerformanceScore {
-  score: number // 0-100
-  breakdown: {
-    budgetAdherence: number
-    savingsRate: number
-    consistency: number
-  }
-  grade: 'A' | 'B' | 'C' | 'D' | 'F'
-}
-
-export const usePerformanceScore = (
-  transactions: Transaction[],
-  budgets: Budget[],
-  startDate: string,
-  endDate: string
-): PerformanceScore
-```
-
-### Enhanced Hooks
-
-#### Update `useBudgetCalculations.ts`
-- Add subcategory summaries
-- Add top transactions
-- Add variance calculations
-
-#### Update `useYearlyCalculations.ts`
-- Add category-wise annual summaries
-- Add best/worst month analysis
-- Add average calculations
+### Accessibility Testing
+- Test with keyboard only (no mouse)
+- Test with screen reader (NVDA on Windows, VoiceOver on Mac)
+- Run axe DevTools or Lighthouse accessibility audit
+- Verify color contrast meets WCAG AA standards
 
 ---
 
-## 7. Implementation Steps
+## SUCCESS CRITERIA
 
-### Phase 1: Foundation (Implement Tab System)
-**Duration**: 1-2 days
+### Build & Tests
+- [ ] `npm run build` completes without errors
+- [ ] `npm run typecheck` passes with no errors
+- [ ] All existing tests pass (0 failures)
+- [ ] New component tests added and passing
+- [ ] Integration tests cover critical flows
 
-1. Create `TabNavigation` component
-2. Add new view mode constants: `OVERVIEW`, `MONTH`, `YEAR`, `TRENDS`
-3. Update `DashboardPage.tsx` to use tab navigation
-4. Update `AppContext` to store active tab
-5. Implement tab switching logic with localStorage persistence
+### UX
+- [ ] No window.alert/confirm in codebase
+- [ ] All forms have inline validation with error messages
+- [ ] Loading states visible during async operations
+- [ ] Empty states show helpful guidance
+- [ ] Error states display actionable error messages
 
-**Files to modify**:
-- `src/constants/viewModes.ts` (add new modes)
-- `src/context/AppContext.tsx` (add activeTab state)
-- `src/components/common/TabNavigation.tsx` (new)
-- `src/pages/DashboardPage.tsx` (refactor)
+### Accessibility
+- [ ] All interactive elements have ARIA labels
+- [ ] Modal traps focus and returns focus on close
+- [ ] Tabs use proper ARIA tab pattern
+- [ ] Form errors announced to screen readers
+- [ ] Keyboard navigation works throughout app
+- [ ] Color contrast meets WCAG AA
 
-### Phase 2: Overview Tab (Hero View)
-**Duration**: 2-3 days
+### Mobile
+- [ ] App usable on 320px viewport
+- [ ] Tables convert to cards on mobile
+- [ ] Forms stack vertically with adequate spacing
+- [ ] Touch targets minimum 44px
+- [ ] No horizontal scrolling required
 
-1. Create `useYTDCalculations` hook
-2. Create `HeroCard` component
-3. Create `MetricCard` component
-4. Create `TrendSparkline` component
-5. Create `AlertBanner` component
-6. Create `useAlerts` hook
-7. Create `OverviewTab.tsx` component with all sections
-8. Integrate into `DashboardPage`
+### Performance
+- [ ] No unnecessary re-renders in React DevTools Profiler
+- [ ] Large lists use virtualization
+- [ ] Charts load on demand (code splitting)
+- [ ] Bundle size analyzed and optimized
 
-**Files to create**:
-- `src/hooks/useYTDCalculations.ts`
-- `src/hooks/useAlerts.ts`
-- `src/components/dashboard/HeroCard.tsx`
-- `src/components/dashboard/MetricCard.tsx`
-- `src/components/dashboard/TrendSparkline.tsx`
-- `src/components/dashboard/AlertBanner.tsx`
-- `src/components/dashboard/OverviewTab.tsx`
-
-### Phase 3: Month Tab Enhancement
-**Duration**: 2-3 days
-
-1. Create `useTopTransactions` hook
-2. Create `TopTransactions` component
-3. Create `CategoryProgressRow` component
-4. Enhance `SummaryCard` with better styling
-5. Enhance `GroupBreakdown` with expand/collapse
-6. Update `PeriodSelector` with "Today" button
-7. Create `MonthTab.tsx` component
-8. Refactor existing monthly view logic
-
-**Files to modify/create**:
-- `src/hooks/useTopTransactions.ts` (new)
-- `src/components/dashboard/TopTransactions.tsx` (new)
-- `src/components/dashboard/CategoryProgressRow.tsx` (new)
-- `src/components/dashboard/SummaryCard.tsx` (enhance)
-- `src/components/dashboard/GroupBreakdown.tsx` (enhance)
-- `src/components/common/PeriodSelector.tsx` (enhance)
-- `src/components/dashboard/MonthTab.tsx` (new)
-
-### Phase 4: Year Tab Enhancement
-**Duration**: 2-3 days
-
-1. Create `PerformanceHeatmap` component
-2. Enhance `YearlySummary` for compact display
-3. Update `MonthlyBreakdownTable` with better interactivity
-4. Update `MonthlyTrendChart` to show dual-axis
-5. Refactor `YearlyCategoryTrends` for cleaner display
-6. Create `YearTab.tsx` component
-7. Add drill-down functionality (click month → jump to Month tab)
-
-**Files to modify/create**:
-- `src/components/dashboard/PerformanceHeatmap.tsx` (new)
-- `src/components/dashboard/YearlySummary.tsx` (enhance)
-- `src/components/dashboard/MonthlyBreakdownTable.tsx` (enhance)
-- `src/components/dashboard/MonthlyTrendChart.tsx` (enhance)
-- `src/components/dashboard/YearlyCategoryTrends.tsx` (enhance)
-- `src/components/dashboard/YearTab.tsx` (new)
-
-### Phase 5: Trends Tab (New)
-**Duration**: 3-4 days
-
-1. Create `useTrendCalculations` hook
-2. Create `PeriodRangeSelector` component
-3. Create `CategoryTrendChart` component (multi-line)
-4. Create `VarianceAreaChart` component
-5. Create `InsightsList` component
-6. Create trend analysis utilities
-7. Create `TrendsTab.tsx` component
-8. Implement insight generation logic
-
-**Files to create**:
-- `src/hooks/useTrendCalculations.ts`
-- `src/components/dashboard/PeriodRangeSelector.tsx`
-- `src/components/dashboard/CategoryTrendChart.tsx`
-- `src/components/dashboard/VarianceAreaChart.tsx`
-- `src/components/dashboard/InsightsList.tsx`
-- `src/components/dashboard/TrendsTab.tsx`
-- `src/utils/insights.ts`
-
-### Phase 6: Design Polish
-**Duration**: 2-3 days
-
-1. Apply consistent spacing across all components
-2. Implement hover animations and transitions
-3. Add loading states for data calculations
-4. Implement skeleton loaders
-5. Add empty states with helpful messages
-6. Improve responsive design for mobile
-7. Test and refine color scheme
-8. Add micro-interactions (number counters, progress animations)
-
-**Files to modify**:
-- All dashboard components (add animations)
-- `src/components/common/LoadingState.tsx` (new)
-- `src/components/common/EmptyState.tsx` (new)
-- Update Tailwind config if needed
-
-### Phase 7: Testing & Refinement
-**Duration**: 2-3 days
-
-1. Write tests for new hooks
-   - `useYTDCalculations.test.ts`
-   - `useTrendCalculations.test.ts`
-   - `useAlerts.test.ts`
-   - `useTopTransactions.test.ts`
-
-2. Write component tests
-   - `TabNavigation.test.tsx`
-   - `HeroCard.test.tsx`
-   - `MetricCard.test.tsx`
-   - `OverviewTab.test.tsx`
-   - `TrendsTab.test.tsx`
-
-3. Integration testing
-   - Test tab navigation flow
-   - Test drill-down from Year to Month
-   - Test period selector interactions
-
-4. Manual testing
-   - Test with real data
-   - Test with edge cases (no data, partial data)
-   - Test responsive design on various devices
-
-5. Performance optimization
-   - Optimize calculations with memoization
-   - Lazy load chart libraries
-   - Code splitting for tabs
-
-**Test files to create**:
-- `src/hooks/__tests__/useYTDCalculations.test.ts`
-- `src/hooks/__tests__/useTrendCalculations.test.ts`
-- `src/hooks/__tests__/useAlerts.test.ts`
-- `src/components/dashboard/__tests__/TabNavigation.test.tsx`
-- `src/components/dashboard/__tests__/OverviewTab.test.tsx`
-
-### Phase 8: Documentation & Cleanup
-**Duration**: 1 day
-
-1. Update README with new dashboard features
-2. Add inline documentation for complex calculations
-3. Create visual documentation (screenshots)
-4. Clean up unused code
-5. Update CHANGELOG.md
-6. Final code review
+### Documentation
+- [ ] README matches current features
+- [ ] product-context.md reflects 4-tab dashboard
+- [ ] technical-context.md accurate for component structure
+- [ ] CHANGELOG.md updated with changes
 
 ---
 
-## 8. Testing Strategy
+## ESTIMATED EFFORT
+- **Phase 1**: 2 hours (critical path)
+- **Phase 2**: 2 hours
+- **Phase 3**: 3 hours
+- **Phase 4**: 4 hours (most complex - accessibility)
+- **Phase 5**: 3 hours
+- **Phase 6**: 4 hours (performance profiling + optimization)
+- **Phase 7**: 6 hours (testing is time-consuming)
+- **Phase 8**: 2 hours
 
-### Unit Tests
-Test all calculation hooks thoroughly:
-- `useYTDCalculations`: Verify YTD sums, percentages, savings rate
-- `useTrendCalculations`: Verify trend data accuracy, period filtering
-- `useAlerts`: Verify alert generation logic, thresholds
-- `useTopTransactions`: Verify sorting, filtering, limit
-
-### Component Tests
-Test user interactions:
-- Tab navigation switches views correctly
-- Period selectors update data
-- Click-through navigation (Year → Month)
-- Alert actions work
-- Expand/collapse interactions
-
-### Integration Tests
-- Full dashboard flow from Overview → Month → Year → Trends
-- Data consistency across tabs
-- State persistence (localStorage)
-
-### Visual Regression Tests (Optional)
-- Screenshot comparison for major views
-- Use Chromatic or Percy if budget allows
+**Total**: ~26 hours of focused development
 
 ---
 
-## 9. Mobile Responsiveness Strategy
-
-### Breakpoint Behavior
-
-#### Mobile (< 768px)
-- Stack all cards vertically
-- Single column layout
-- Tab navigation becomes dropdown
-- Compact charts (smaller, simpler)
-- Hide less critical metrics
-- Condensed table views (scrollable)
-
-#### Tablet (768px - 1024px)
-- 2-column grid for cards
-- Show all tabs in horizontal layout
-- Medium-sized charts
-- Show most metrics
-
-#### Desktop (> 1024px)
-- 3-4 column grids
-- Full tab bar
-- Full-sized charts
-- All metrics visible
-- Side-by-side comparisons
-
-### Touch Interactions
-- Swipe between tabs on mobile
-- Tap to expand categories
-- Pull to refresh data
-- Long-press for context menu (optional)
+## ROLLBACK PLAN
+- Commit after each phase completes
+- Tag stable commits: `git tag phase-1-complete`
+- If issues arise, rollback: `git reset --hard phase-X-complete`
 
 ---
 
-## 10. Performance Considerations
-
-### Optimization Techniques
-1. **Memoization**: Use `useMemo` for expensive calculations
-2. **Code Splitting**: Lazy load tab components
-3. **Chart Libraries**: Load chart library only when needed
-4. **Virtual Scrolling**: For long transaction lists (if added later)
-5. **Debouncing**: Period selector changes
-6. **IndexedDB Queries**: Optimize with indexes
-
-### Expected Performance
-- Initial load: < 2 seconds
-- Tab switch: < 300ms
-- Period change: < 500ms
-- Chart render: < 1 second
+## PHASE DEPENDENCIES
+- **Phase 1** must complete first (blocks all testing)
+- **Phase 2** can run parallel to Phase 3
+- **Phase 3** should complete before Phase 4 (modals needed for accessibility)
+- **Phase 4-6** can partially overlap
+- **Phase 7** requires all components stable
+- **Phase 8** is final polish after everything works
 
 ---
 
-## 11. Success Metrics
-
-### User Experience Metrics
-- Time to understand current financial status: **< 5 seconds**
-- Clicks to reach monthly detail: **1 click** (from Overview)
-- Users who interact with all 4 tabs: **> 70%**
-- Mobile usage satisfaction: **High** (responsive design works well)
-
-### Technical Metrics
-- Page load time: **< 2 seconds**
-- Tab switch latency: **< 300ms**
-- Test coverage: **> 80%**
-- Zero accessibility violations (WCAG AA)
-
----
-
-## 12. Future Enhancements (Post-MVP)
-
-### Phase 9+ (Future Ideas)
-1. **Export Reports**: PDF/Excel export of dashboard data
-2. **Custom Date Ranges**: Select any date range for analysis
-3. **Goal Setting**: Set savings goals and track progress
-4. **Forecasting**: Predict future expenses based on trends
-5. **Budget Templates**: Save and reuse budget configurations
-6. **Comparison Mode**: Compare different months/years side-by-side
-7. **Dark Mode**: Full dark theme support
-8. **Animations**: More sophisticated transitions and celebrations (confetti on goals met)
-9. **Insights AI**: More intelligent pattern recognition
-10. **Widgets**: Dashboard widgets for quick access
-
----
-
-## 13. File Structure Summary
-
-```
-src/
-├── components/
-│   ├── dashboard/
-│   │   ├── tabs/
-│   │   │   ├── OverviewTab.tsx       [NEW]
-│   │   │   ├── MonthTab.tsx          [NEW]
-│   │   │   ├── YearTab.tsx           [NEW]
-│   │   │   └── TrendsTab.tsx         [NEW]
-│   │   ├── TabNavigation.tsx         [NEW]
-│   │   ├── HeroCard.tsx              [NEW]
-│   │   ├── MetricCard.tsx            [NEW]
-│   │   ├── TrendSparkline.tsx        [NEW]
-│   │   ├── AlertBanner.tsx           [NEW]
-│   │   ├── TopTransactions.tsx       [NEW]
-│   │   ├── CategoryProgressRow.tsx   [NEW]
-│   │   ├── PerformanceHeatmap.tsx    [NEW]
-│   │   ├── PeriodRangeSelector.tsx   [NEW]
-│   │   ├── CategoryTrendChart.tsx    [NEW]
-│   │   ├── VarianceAreaChart.tsx     [NEW]
-│   │   ├── InsightsList.tsx          [NEW]
-│   │   ├── SummaryCard.tsx           [ENHANCED]
-│   │   ├── GroupBreakdown.tsx        [ENHANCED]
-│   │   ├── YearlySummary.tsx         [ENHANCED]
-│   │   ├── MonthlyBreakdownTable.tsx [ENHANCED]
-│   │   ├── MonthlyTrendChart.tsx     [ENHANCED]
-│   │   └── YearlyCategoryTrends.tsx  [ENHANCED]
-│   └── common/
-│       ├── PeriodSelector.tsx        [ENHANCED]
-│       ├── LoadingState.tsx          [NEW]
-│       └── EmptyState.tsx            [NEW]
-├── hooks/
-│   ├── useYTDCalculations.ts         [NEW]
-│   ├── useTrendCalculations.ts       [NEW]
-│   ├── useTopTransactions.ts         [NEW]
-│   ├── useAlerts.ts                  [NEW]
-│   ├── useBudgetCalculations.ts      [ENHANCED]
-│   └── useYearlyCalculations.ts      [ENHANCED]
-├── utils/
-│   └── insights.ts                   [NEW]
-├── constants/
-│   └── viewModes.ts                  [ENHANCED]
-└── pages/
-    └── DashboardPage.tsx             [REFACTORED]
-```
-
----
-
-## 14. Developer Execution Checklist
-
-Use this checklist when implementing:
-
-### Pre-Implementation
-- [ ] Review and understand current codebase structure
-- [ ] Review design system constants
-- [ ] Set up testing environment
-- [ ] Create feature branch: `feature/dashboard-redesign`
-
-### Phase 1: Foundation
-- [ ] Create view mode constants
-- [ ] Implement TabNavigation component
-- [ ] Update AppContext with tab state
-- [ ] Refactor DashboardPage for tabs
-- [ ] Test tab switching
-- [ ] Commit: "feat: add tab navigation system"
-
-### Phase 2: Overview Tab
-- [ ] Create useYTDCalculations hook with tests
-- [ ] Create HeroCard component
-- [ ] Create MetricCard component
-- [ ] Create TrendSparkline component
-- [ ] Create useAlerts hook with tests
-- [ ] Create AlertBanner component
-- [ ] Assemble OverviewTab component
-- [ ] Test with sample data
-- [ ] Commit: "feat: implement overview tab"
-
-### Phase 3: Month Tab
-- [ ] Create useTopTransactions hook with tests
-- [ ] Create TopTransactions component
-- [ ] Create CategoryProgressRow component
-- [ ] Enhance SummaryCard styling
-- [ ] Enhance GroupBreakdown with expand/collapse
-- [ ] Update PeriodSelector with "Today" button
-- [ ] Assemble MonthTab component
-- [ ] Test all interactions
-- [ ] Commit: "feat: enhance month tab"
-
-### Phase 4: Year Tab
-- [ ] Create PerformanceHeatmap component
-- [ ] Refactor YearlySummary for compact view
-- [ ] Enhance MonthlyBreakdownTable interactivity
-- [ ] Update MonthlyTrendChart for dual-axis
-- [ ] Refactor YearlyCategoryTrends
-- [ ] Assemble YearTab component
-- [ ] Implement drill-down navigation
-- [ ] Test all interactions
-- [ ] Commit: "feat: enhance year tab"
-
-### Phase 5: Trends Tab
-- [ ] Create useTrendCalculations hook with tests
-- [ ] Create PeriodRangeSelector component
-- [ ] Create CategoryTrendChart component
-- [ ] Create VarianceAreaChart component
-- [ ] Create InsightsList component
-- [ ] Create insights generation utilities
-- [ ] Assemble TrendsTab component
-- [ ] Test with various time periods
-- [ ] Commit: "feat: implement trends tab"
-
-### Phase 6: Design Polish
-- [ ] Apply consistent spacing
-- [ ] Implement hover animations
-- [ ] Add loading states
-- [ ] Create skeleton loaders
-- [ ] Add empty states
-- [ ] Test responsive design (mobile, tablet, desktop)
-- [ ] Refine colors and visual hierarchy
-- [ ] Add micro-interactions
-- [ ] Commit: "style: polish dashboard design"
-
-### Phase 7: Testing
-- [ ] Write hook tests (YTD, Trends, Alerts, TopTransactions)
-- [ ] Write component tests (Tab Navigation, Cards, Charts)
-- [ ] Write integration tests (tab flows, drill-down)
-- [ ] Manual testing with real data
-- [ ] Test edge cases (empty data, partial data)
-- [ ] Performance testing and optimization
-- [ ] Cross-browser testing
-- [ ] Accessibility testing
-- [ ] Commit: "test: add comprehensive test coverage"
-
-### Phase 8: Documentation
-- [ ] Update README.md
-- [ ] Add inline code documentation
-- [ ] Create visual documentation (screenshots)
-- [ ] Update CHANGELOG.md
-- [ ] Clean up unused code
-- [ ] Final code review
-- [ ] Commit: "docs: update documentation for dashboard redesign"
-
-### Final Steps
-- [ ] Merge feature branch to main
-- [ ] Deploy to production
-- [ ] Monitor for issues
-- [ ] Gather user feedback
-- [ ] Plan next iteration
-
----
-
-## 15. Key Technical Decisions
-
-### Why Tabs Instead of Single Page?
-- **Better organization**: Each tab has a clear purpose
-- **Reduced cognitive load**: Users see one view at a time
-- **Performance**: Lazy load inactive tabs
-- **Scalability**: Easy to add more views later
-
-### Why Four Tabs?
-- **Overview**: Quick health check (new user need)
-- **Month**: Detailed current period (existing, enhanced)
-- **Year**: Annual planning (existing, enhanced)
-- **Trends**: Historical analysis (new analytical need)
-
-### Why YTD in Overview?
-- Most users care about "this year so far"
-- Provides context beyond current month
-- Helps track annual goals
-
-### Chart Library Choice
-Continue using existing chart library (Recharts assumed) for consistency. If not using one, recommend:
-- **Recharts**: Easy to use, good for this use case
-- **Chart.js**: Lightweight alternative
-- **D3.js**: If very custom visualizations needed (overkill for MVP)
-
-### State Management
-Continue using React Context. Current approach is sufficient for this app size. No need for Redux/Zustand.
-
----
-
-## 16. Risk Mitigation
-
-### Potential Risks & Solutions
-
-1. **Risk**: Implementation takes longer than estimated
-   - **Mitigation**: Implement in phases, ship Phase 1-3 first if needed
-
-2. **Risk**: Performance issues with large datasets
-   - **Mitigation**: Implement pagination, virtual scrolling, limit data queries
-
-3. **Risk**: Mobile design doesn't work well
-   - **Mitigation**: Design mobile-first, test early and often
-
-4. **Risk**: Users don't understand new navigation
-   - **Mitigation**: Add onboarding tooltips, use clear labels
-
-5. **Risk**: Calculations are incorrect
-   - **Mitigation**: Comprehensive test coverage, validate against existing data
-
----
-
-## 17. Conclusion
-
-This plan transforms the dashboard from a functional tool into a **beautiful, insightful financial command center**. The multi-tab approach provides clarity and organization, while the new visualizations and metrics help users truly understand their financial health.
-
-The implementation is structured in phases to allow for iterative development and early testing. Each phase builds on the previous one, creating a solid foundation for future enhancements.
-
-**Expected Outcome**: A dashboard that users **love to use** and that provides **genuine insights** into their financial behavior, helping them make better decisions and achieve their goals.
-
----
-
-## Appendix: Design Mockup Text Representations
-
-### Overview Tab
-```
-┌─────────────────────────────────────────────────────────────┐
-│                        DASHBOARD                             │
-├─────────────────────────────────────────────────────────────┤
-│  [Overview*] [Month] [Year] [Trends]                        │
-│                                                              │
-│  ┌─────────────────────────────────────────────────────────┐│
-│  │  🎯 Year-to-Date Savings                                ││
-│  │                                                          ││
-│  │  R$ 15.450,00 / R$ 20.000,00  (77%)                    ││
-│  │  ████████████████████████████████░░░░░░░                ││
-│  │                                                          ││
-│  │  On track to meet your annual savings goal! 💪          ││
-│  └─────────────────────────────────────────────────────────┘│
-│                                                              │
-│  Current Month: Janeiro 2025                                │
-│  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐     │
-│  │  Receitas    │  │  Despesas    │  │  Saldo       │     │
-│  │              │  │              │  │              │     │
-│  │  R$ 5.200    │  │  R$ 3.800    │  │  R$ 1.400    │     │
-│  │  104% ✓      │  │  95% ✓       │  │  +27%        │     │
-│  └──────────────┘  └──────────────┘  └──────────────┘     │
-│                                                              │
-│  ┌────────────────────────┐  ┌────────────────────────┐    │
-│  │  Top Categories        │  │  Recent Trend          │    │
-│  │                        │  │                        │    │
-│  │  🏠 Moradia  R$ 1.800 │  │  Last 3 Months        │    │
-│  │  🍔 Alimentação R$ 900│  │      ╱╲                │    │
-│  │  🚗 Transporte R$ 600 │  │    ╱    ╲    ╱        │    │
-│  │  ⚡ Outros    R$ 500  │  │  ╱        ╲╱          │    │
-│  │                        │  │  Improving ↗ +12%     │    │
-│  └────────────────────────┘  └────────────────────────┘    │
-│                                                              │
-│  ⚠ Alerts & Insights                                        │
-│  ┌─────────────────────────────────────────────────────────┐│
-│  │ ⚠ Alimentação: 85% of budget used (15 days left)       ││
-│  │ ✓ Great job! You're under budget in 7/9 categories     ││
-│  │ 💡 Consider moving R$200 from Lazer to savings         ││
-│  └─────────────────────────────────────────────────────────┘│
-└─────────────────────────────────────────────────────────────┘
-```
-
-### Month Tab
-```
-┌─────────────────────────────────────────────────────────────┐
-│                        DASHBOARD                             │
-├─────────────────────────────────────────────────────────────┤
-│  [Overview] [Month*] [Year] [Trends]                        │
-│                                                              │
-│  [< Janeiro 2025 >]  [Today]                                │
-│                                                              │
-│  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐     │
-│  │  Receitas    │  │  Despesas    │  │  Saldo Mensal│     │
-│  │              │  │              │  │              │     │
-│  │  Previsto    │  │  Previsto    │  │  R$ 1.400   │     │
-│  │  R$ 5.000    │  │  R$ 4.000    │  │              │     │
-│  │              │  │              │  │  +27% da     │     │
-│  │  Realizado   │  │  Realizado   │  │  receita     │     │
-│  │  R$ 5.200    │  │  R$ 3.800    │  │              │     │
-│  │  ███████░ 104%│  │  ██████░ 95%│  │  ✓ Poupando │     │
-│  └──────────────┘  └──────────────┘  └──────────────┘     │
-│                                                              │
-│  ┌──────────────────────┐  ┌──────────────────────┐        │
-│  │  Budget vs Actual    │  │  Expense Distribution│        │
-│  │  ┌──────┐  ┌──────┐ │  │         🍰           │        │
-│  │  │      │  │ ███  │ │  │    ╱────────╲        │        │
-│  │  │ ███  │  │ ███  │ │  │   │  Moradia │       │        │
-│  │  │ ███  │  │ ███  │ │  │   │   47%    │       │        │
-│  │  └──────┘  └──────┘ │  │    ╲────────╱        │        │
-│  │  Budget   Actual     │  │                      │        │
-│  └──────────────────────┘  └──────────────────────┘        │
-│                                                              │
-│  Category Breakdown                                          │
-│  ┌─────────────────────────────────────────────────────────┐│
-│  │ Category        Budget    Actual    Remaining   Status  ││
-│  │ ────────────────────────────────────────────────────    ││
-│  │ 🏠 Moradia      R$ 2.000  R$ 1.850  R$ 150      ████░  ││
-│  │ 🍔 Alimentação  R$ 1.000  R$ 850    R$ 150      ████░  ││
-│  │ 🚗 Transporte   R$ 800    R$ 600    R$ 200      ███░░  ││
-│  │ ⚡ Outros       R$ 200    R$ 500   -R$ 300      █████⚠││
-│  └─────────────────────────────────────────────────────────┘│
-│                                                              │
-│  Top Transactions This Month                                 │
-│  ┌─────────────────────────────────────────────────────────┐│
-│  │ • Aluguel - R$ 1.500 - 01/01 - Moradia                 ││
-│  │ • Supermercado - R$ 450 - 15/01 - Alimentação          ││
-│  │ • Gasolina - R$ 300 - 10/01 - Transporte               ││
-│  └─────────────────────────────────────────────────────────┘│
-└─────────────────────────────────────────────────────────────┘
-```
+**Ready to execute**: Start with Phase 1, verify build success, then proceed sequentially through remaining phases.

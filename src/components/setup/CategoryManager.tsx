@@ -3,12 +3,17 @@ import { useApp } from '@/context/AppContext'
 import { Button } from '@/components/common/Button'
 import { Input } from '@/components/common/Input'
 import { Modal } from '@/components/common/Modal'
+import { ConfirmModal } from '@/components/common/ConfirmModal'
 
 export const CategoryManager: React.FC = () => {
   const { categories, addCategory, deleteCategory } = useApp()
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [newCategoryName, setNewCategoryName] = useState('')
   const [selectedParentId, setSelectedParentId] = useState<number | undefined>()
+  const [deleteConfirm, setDeleteConfirm] = useState<{ isOpen: boolean; id: number | null }>({
+    isOpen: false,
+    id: null,
+  })
 
   const parentCategories = categories.filter(c => !c.parentId)
 
@@ -31,9 +36,14 @@ export const CategoryManager: React.FC = () => {
     setIsModalOpen(false)
   }
 
-  const handleDelete = async (id: number) => {
-    if (window.confirm('Tem certeza que deseja excluir esta categoria?')) {
-      await deleteCategory(id)
+  const handleDelete = (id: number) => {
+    setDeleteConfirm({ isOpen: true, id })
+  }
+
+  const confirmDelete = async () => {
+    if (deleteConfirm.id) {
+      await deleteCategory(deleteConfirm.id)
+      setDeleteConfirm({ isOpen: false, id: null })
     }
   }
 
@@ -53,6 +63,7 @@ export const CategoryManager: React.FC = () => {
                 variant="danger"
                 size="sm"
                 onClick={() => handleDelete(parent.id!)}
+                aria-label={`Excluir categoria ${parent.name}`}
               >
                 Excluir
               </Button>
@@ -64,6 +75,7 @@ export const CategoryManager: React.FC = () => {
                   <button
                     onClick={() => handleDelete(sub.id!)}
                     className="text-red-600 hover:text-red-800 text-xs"
+                    aria-label={`Excluir subcategoria ${sub.name}`}
                   >
                     Excluir
                   </button>
@@ -133,6 +145,17 @@ export const CategoryManager: React.FC = () => {
           </div>
         </div>
       </Modal>
+
+      <ConfirmModal
+        isOpen={deleteConfirm.isOpen}
+        onClose={() => setDeleteConfirm({ isOpen: false, id: null })}
+        onConfirm={confirmDelete}
+        title="Excluir Categoria"
+        message="Tem certeza que deseja excluir esta categoria? Esta ação não pode ser desfeita."
+        confirmText="Excluir"
+        cancelText="Cancelar"
+        variant="danger"
+      />
     </div>
   )
 }

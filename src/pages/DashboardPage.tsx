@@ -1,13 +1,17 @@
-import React from 'react'
+import React, { Suspense, lazy } from 'react'
 import { PageContainer } from '@/components/layout/PageContainer'
 import { TabNavigation } from '@/components/dashboard/TabNavigation'
-import { OverviewTab } from '@/components/dashboard/tabs/OverviewTab'
-import { MonthTab } from '@/components/dashboard/tabs/MonthTab'
-import { YearTab } from '@/components/dashboard/tabs/YearTab'
-import { TrendsTab } from '@/components/dashboard/tabs/TrendsTab'
+import { PeriodSelector } from '@/components/common/PeriodSelector'
+import { LoadingState } from '@/components/common/LoadingState'
 import { useApp } from '@/context/AppContext'
 import { VIEW_MODES } from '@/constants/viewModes'
 import { getMonthName } from '@/utils/date'
+
+// Lazy load tab components for code splitting
+const OverviewTab = lazy(() => import('@/components/dashboard/tabs/OverviewTab').then(module => ({ default: module.OverviewTab })))
+const MonthTab = lazy(() => import('@/components/dashboard/tabs/MonthTab').then(module => ({ default: module.MonthTab })))
+const YearTab = lazy(() => import('@/components/dashboard/tabs/YearTab').then(module => ({ default: module.YearTab })))
+const TrendsTab = lazy(() => import('@/components/dashboard/tabs/TrendsTab').then(module => ({ default: module.TrendsTab })))
 
 export const DashboardPage: React.FC = () => {
   const {
@@ -75,51 +79,62 @@ export const DashboardPage: React.FC = () => {
           </div>
         </div>
 
-        {/* Tab Content */}
-        <div className="min-h-[400px]">
-          {currentTab === VIEW_MODES.OVERVIEW && (
-            <OverviewTab
-              transactions={transactions}
-              budgets={budgets}
-              categories={categories}
-              year={selectedYear}
-              month={selectedMonth}
-            />
-          )}
-
-          {currentTab === VIEW_MODES.MONTH && (
-            <MonthTab
-              transactions={transactions}
-              budgets={budgets}
-              categories={categories}
-              sources={sources}
+        {/* Period Selector - Only for Month and Year tabs */}
+        {(currentTab === VIEW_MODES.MONTH || currentTab === VIEW_MODES.YEAR) && (
+          <div className="bg-white rounded-xl shadow-sm p-6">
+            <PeriodSelector
               selectedYear={selectedYear}
               selectedMonth={selectedMonth}
               onYearChange={setSelectedYear}
               onMonthChange={setSelectedMonth}
+              showMonths={currentTab === VIEW_MODES.MONTH}
             />
-          )}
+          </div>
+        )}
 
-          {currentTab === VIEW_MODES.YEAR && (
-            <YearTab
-              transactions={transactions}
-              budgets={budgets}
-              categories={categories}
-              year={selectedYear}
-              onYearChange={setSelectedYear}
-              onMonthClick={handleMonthDrillDown}
-            />
-          )}
+        {/* Tab Content */}
+        <div className="min-h-[400px]">
+          <Suspense fallback={<LoadingState />}>
+            {currentTab === VIEW_MODES.OVERVIEW && (
+              <OverviewTab
+                transactions={transactions}
+                budgets={budgets}
+                categories={categories}
+              />
+            )}
 
-          {currentTab === VIEW_MODES.TRENDS && (
-            <TrendsTab
-              transactions={transactions}
-              budgets={budgets}
-              categories={categories}
-              year={selectedYear}
-              month={selectedMonth}
-            />
-          )}
+            {currentTab === VIEW_MODES.MONTH && (
+              <MonthTab
+                transactions={transactions}
+                budgets={budgets}
+                categories={categories}
+                sources={sources}
+                selectedYear={selectedYear}
+                selectedMonth={selectedMonth}
+                onYearChange={setSelectedYear}
+                onMonthChange={setSelectedMonth}
+              />
+            )}
+
+            {currentTab === VIEW_MODES.YEAR && (
+              <YearTab
+                transactions={transactions}
+                budgets={budgets}
+                categories={categories}
+                year={selectedYear}
+                onYearChange={setSelectedYear}
+                onMonthClick={handleMonthDrillDown}
+              />
+            )}
+
+            {currentTab === VIEW_MODES.TRENDS && (
+              <TrendsTab
+                transactions={transactions}
+                budgets={budgets}
+                categories={categories}
+              />
+            )}
+          </Suspense>
         </div>
       </div>
     </PageContainer>

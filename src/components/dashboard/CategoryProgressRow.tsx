@@ -27,18 +27,19 @@ export const CategoryProgressRow: React.FC<CategoryProgressRowProps> = ({
   const [isExpanded, setIsExpanded] = useState(false)
 
   const getStatusInfo = (percentage: number) => {
-    if (percentage >= 100) {
+    // 5% tolerance: 95-105% is considered "within budget"
+    if (percentage > 105) {
       return {
         label: 'Acima do orçamento',
         color: 'text-red-600 dark:text-red-400',
         bgColor: 'bg-red-500',
         icon: '⚠',
       }
-    } else if (percentage >= 80) {
+    } else if (percentage >= 85) {
       return {
         label: 'Atenção',
-        color: 'text-amber-600 dark:text-amber-400',
-        bgColor: 'bg-amber-500',
+        color: 'text-lime-600 dark:text-lime-400',
+        bgColor: 'bg-lime-500',
         icon: '⚡',
       }
     } else {

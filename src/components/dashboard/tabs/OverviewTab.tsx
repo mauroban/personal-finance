@@ -16,18 +16,19 @@ interface OverviewTabProps {
   transactions: Transaction[]
   budgets: Budget[]
   categories: Category[]
-  year: number
-  month: number
 }
 
 export const OverviewTab: React.FC<OverviewTabProps> = ({
   transactions,
   budgets,
   categories,
-  year,
-  month,
 }) => {
   const { setViewMode } = useApp()
+
+  // Always use current date for Overview
+  const today = new Date()
+  const year = today.getFullYear()
+  const month = today.getMonth() + 1
 
   // Get YTD calculations
   const ytdSummary = useYTDCalculations(transactions, budgets, year, month)

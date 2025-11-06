@@ -20,12 +20,12 @@ export const SummaryCard: React.FC<SummaryCardProps> = ({
 }) => {
   const percentage = budgeted > 0 ? (actual / budgeted) * 100 : 0
 
-  // For expenses: over budget is bad
-  const isOverBudget = type === 'expense' && actual > budgeted
+  // 5% tolerance: expenses up to 105% of budget are considered "within budget"
+  const isOverBudget = type === 'expense' && percentage > 105
 
-  // For income: under budget is bad (warning), over budget is good
-  const isUnderIncome = type === 'income' && actual < budgeted
-  const isOverIncome = type === 'income' && actual > budgeted
+  // For income: under 95% is bad (warning), over 105% is celebrated
+  const isUnderIncome = type === 'income' && percentage < 95
+  const isOverIncome = type === 'income' && percentage > 105
 
   const hasIssue = isOverBudget || isUnderIncome
 
@@ -172,7 +172,7 @@ export const SummaryCard: React.FC<SummaryCardProps> = ({
                 </span>
                 <span className={`text-xs font-semibold ${
                   type === 'income'
-                    ? (actual >= budgeted ? 'text-green-600 dark:text-green-400' : 'text-amber-600 dark:text-amber-400')
+                    ? (actual >= budgeted ? 'text-green-600 dark:text-green-400' : 'text-lime-600 dark:text-lime-400')
                     : (actual <= budgeted ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400')
                 }`}>
                   {type === 'income'
@@ -208,7 +208,7 @@ export const SummaryCard: React.FC<SummaryCardProps> = ({
                 <span className={`text-xs font-semibold ${
                   actual >= budgeted
                     ? 'text-green-600 dark:text-green-400'
-                    : 'text-amber-600 dark:text-amber-400'
+                    : 'text-lime-600 dark:text-lime-400'
                 }`}>
                   {formatCurrency(Math.abs(actual - budgeted))}
                 </span>
