@@ -2,6 +2,8 @@
 
 A simple, local-first personal finance application built with React, TypeScript, and Tailwind CSS. Track your income and expenses, set monthly budgets, and gain clarity over your finances—all while keeping your data private and local.
 
+**Available as both a web app and desktop application** (Windows & macOS)
+
 ## 🚀 Quick Start
 
 ### Installation
@@ -32,6 +34,54 @@ npm run preview
 # Run all tests
 npm test
 ```
+
+## 🖥️ Desktop Application
+
+This app can be built as a **native desktop application** for Windows and macOS using Tauri!
+
+✅ **Build Status:** Windows installers are ready! MSI and NSIS installers have been built and are available in `src-tauri/target/release/bundle/`.
+
+### Why Desktop App?
+
+- **No browser required** - Runs as a standalone application
+- **Native look and feel** - Integrates with your operating system
+- **Small bundle size** - ~60-100 MB (vs 150-250 MB with Electron)
+- **Same features** - All web app functionality works identically
+- **Easy distribution** - Users install like any other app, no dev tools needed
+
+### Ready-to-Install Desktop Builds
+
+**Windows Installers (Built & Ready):**
+- **MSI:** `src-tauri/target/release/bundle/msi/Simple Budget Tracker_1.0.0_x64_en-US.msi`
+- **NSIS:** `src-tauri/target/release/bundle/nsis/Simple Budget Tracker_1.0.0_x64-setup.exe`
+
+**App Icon:** A placeholder icon (blue with "$" symbol) is included. See [ICONS.md](./ICONS.md) for customization instructions.
+
+### Building Desktop Installers
+
+**Prerequisites:**
+1. Install [Rust](https://rustup.rs/) (required for Tauri)
+2. Platform-specific tools:
+   - **Windows:** Visual Studio C++ Build Tools
+   - **macOS:** Xcode Command Line Tools
+
+**Build Commands:**
+```bash
+# Development mode (with hot reload)
+npm run tauri:dev
+
+# Build production installer
+npm run tauri:build
+
+# Regenerate app icons (after updating app-icon.svg)
+npm run tauri icon app-icon.svg
+```
+
+**Output:**
+- **Windows:** `src-tauri/target/release/bundle/msi/Simple Budget Tracker_1.0.0_x64_en-US.msi`
+- **macOS:** `src-tauri/target/release/bundle/dmg/Simple Budget Tracker_1.0.0_x64.dmg`
+
+📖 **Full desktop build guide:** See [DESKTOP-BUILD.md](./DESKTOP-BUILD.md) for complete instructions, troubleshooting, and distribution tips.
 
 ## ✨ Key Feature: Yearly Planning
 
@@ -192,6 +242,8 @@ See `docs/technical-context.md` for detailed testing guidelines.
 
 - **Product Context**: See `docs/product-context.md` for product vision and user flows
 - **Technical Context**: See `docs/technical-context.md` for architecture and development guidelines
+- **Desktop Build Guide**: See `DESKTOP-BUILD.md` for complete Tauri build instructions
+- **Icon Customization**: See `ICONS.md` for app icon generation and customization
 
 ## 🌟 Features
 

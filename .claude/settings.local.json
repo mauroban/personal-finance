@@ -15,7 +15,8 @@
       "Bash(if [ -f \"src/utils/sanitize.ts\" ])",
       "Bash(then echo \"exists\")",
       "Bash(else echo \"not found\")",
-      "Bash(fi)"
+      "Bash(fi)",
+      "Bash(dir \"C:\\Users\\mauro\\Desktop\\personal-finance\\src\" /b)"
     ],
     "deny": [],
     "ask": []

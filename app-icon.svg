@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="1024" height="1024" viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background -->
+  <rect width="1024" height="1024" fill="#3b82f6" rx="180"/>
+
+  <!-- Dollar sign symbol -->
+  <text x="512" y="700" font-family="Arial, sans-serif" font-size="600" font-weight="bold" fill="white" text-anchor="middle">$</text>
+
+  <!-- Subtitle -->
+  <text x="512" y="850" font-family="Arial, sans-serif" font-size="80" fill="white" text-anchor="middle" opacity="0.9">Budget</text>
+</svg>

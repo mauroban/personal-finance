@@ -22,3 +22,10 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Tauri build artifacts
+src-tauri/target
+src-tauri/WixTools
+
+# Note: Icon source files (app-icon.svg, create-icon.js) and generated icons
+# in src-tauri/icons/ are intentionally tracked in version control

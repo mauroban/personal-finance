@@ -48,7 +48,7 @@ export const CategoryManager: React.FC = () => {
   }
 
   return (
-    <div className="bg-gradient-to-br from-purple-50 to-pink-50 dark:from-purple-900/20 dark:to-pink-900/20 rounded-xl shadow-sm border border-purple-200 dark:border-purple-800/50 p-4 sm:p-6">
+    <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-4 sm:p-6">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
         <div className="flex items-center gap-3">
           <div className="p-2 bg-purple-600 dark:bg-purple-500 rounded-lg flex-shrink-0">
@@ -68,7 +68,7 @@ export const CategoryManager: React.FC = () => {
 
       <div className="space-y-3">
         {parentCategories.map(parent => (
-          <div key={parent.id} className="bg-white dark:bg-gray-800 border-2 border-purple-200 dark:border-purple-700/50 rounded-xl p-4 hover:shadow-md transition-shadow">
+          <div key={parent.id} className="bg-gray-50 dark:bg-gray-700/50 border border-gray-200 dark:border-gray-600 rounded-lg p-4 hover:shadow-md transition-shadow">
             <div className="flex justify-between items-center mb-3">
               <h3 className="font-bold text-gray-900 dark:text-white text-lg">{parent.name}</h3>
               <Button
@@ -81,9 +81,9 @@ export const CategoryManager: React.FC = () => {
               </Button>
             </div>
             {getSubcategories(parent.id!).length > 0 && (
-              <div className="pl-4 space-y-2 border-l-2 border-purple-300 dark:border-purple-700">
+              <div className="pl-4 space-y-2 border-l-2 border-gray-300 dark:border-gray-600">
                 {getSubcategories(parent.id!).map(sub => (
-                  <div key={sub.id} className="flex justify-between items-center py-1.5 px-3 bg-purple-50 dark:bg-purple-900/20 rounded-lg hover:bg-purple-100 dark:hover:bg-purple-900/30 transition-colors">
+                  <div key={sub.id} className="flex justify-between items-center py-1.5 px-3 bg-white dark:bg-gray-800 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors border border-gray-200 dark:border-gray-600">
                     <span className="text-gray-700 dark:text-gray-300 font-medium">• {sub.name}</span>
                     <button
                       onClick={() => handleDelete(sub.id!)}

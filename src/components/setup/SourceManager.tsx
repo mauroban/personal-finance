@@ -37,7 +37,7 @@ export const SourceManager: React.FC = () => {
   }
 
   return (
-    <div className="bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 rounded-xl shadow-sm border border-green-200 dark:border-green-800/50 p-4 sm:p-6">
+    <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-4 sm:p-6">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
         <div className="flex items-center gap-3">
           <div className="p-2 bg-green-600 dark:bg-green-500 rounded-lg flex-shrink-0">
@@ -59,7 +59,7 @@ export const SourceManager: React.FC = () => {
         {sources.map(source => (
           <div
             key={source.id}
-            className="flex justify-between items-center p-4 bg-white dark:bg-gray-800 border-2 border-green-200 dark:border-green-700/50 rounded-xl hover:shadow-md transition-shadow"
+            className="flex justify-between items-center p-4 bg-gray-50 dark:bg-gray-700/50 border border-gray-200 dark:border-gray-600 rounded-lg hover:shadow-md transition-shadow"
           >
             <div className="flex items-center gap-3">
               <div className="p-2 bg-green-100 dark:bg-green-900/30 rounded-lg">
