@@ -141,8 +141,8 @@ export const SpendingInsights: React.FC<SpendingInsightsProps> = ({
       </h3>
       <div className="space-y-4">
         {insights.map((insight, index) => (
-          <div key={index} className="flex items-start gap-3">
-            <span className="text-2xl flex-shrink-0">{insight.icon}</span>
+          <div key={index} className="flex items-center gap-4">
+            <span className="text-3xl flex-shrink-0 w-10 text-center">{insight.icon}</span>
             <div className="flex-1 min-w-0">
               <div className="text-xs text-gray-500 dark:text-gray-400 mb-0.5">
                 {insight.label}

@@ -1,5 +1,6 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { useApp } from '@/context/AppContext'
+import { Transaction } from '@/types'
 import { Button } from '@/components/common/Button'
 import { Input, Select, TextArea } from '@/components/common/Input'
 import { Modal } from '@/components/common/Modal'
@@ -8,10 +9,11 @@ import { getTodayString, addMonths, formatDate, parseDate } from '@/utils/date'
 interface TransactionFormProps {
   isOpen: boolean
   onClose: () => void
+  transaction?: Transaction
 }
 
-export const TransactionForm: React.FC<TransactionFormProps> = ({ isOpen, onClose }) => {
-  const { categories, sources, addTransaction } = useApp()
+export const TransactionForm: React.FC<TransactionFormProps> = ({ isOpen, onClose, transaction }) => {
+  const { categories, sources, addTransaction, updateTransaction } = useApp()
 
   const [type, setType] = useState<'earning' | 'expense'>('expense')
   const [transactionMode, setTransactionMode] = useState<'unique' | 'installment'>('unique')
@@ -27,6 +29,25 @@ export const TransactionForm: React.FC<TransactionFormProps> = ({ isOpen, onClos
   const parentCategories = categories.filter(c => !c.parentId)
   const selectedGroup = groupId ? categories.find(c => c.id === parseInt(groupId)) : null
   const subCategories = selectedGroup ? categories.filter(c => c.parentId === selectedGroup.id) : []
+
+  // Populate form when editing
+  useEffect(() => {
+    if (transaction) {
+      setType(transaction.type)
+      setValue(transaction.value.toString())
+      setDate(transaction.date)
+      setSourceId(transaction.sourceId?.toString() || '')
+      setGroupId(transaction.groupId?.toString() || '')
+      setSubgroupId(transaction.subgroupId?.toString() || '')
+      setPaymentMethod(transaction.paymentMethod || 'Cartão de Crédito')
+      setNote(transaction.note || '')
+      // For editing, we don't support installment mode
+      setTransactionMode('unique')
+      setCount('1')
+    } else {
+      resetForm()
+    }
+  }, [transaction])
 
   const resetForm = () => {
     setValue('')
@@ -66,7 +87,19 @@ export const TransactionForm: React.FC<TransactionFormProps> = ({ isOpen, onClos
       return
     }
 
-    if (transactionMode === 'installment') {
+    // If editing, update the transaction
+    if (transaction?.id) {
+      await updateTransaction(transaction.id, {
+        type,
+        value: numValue,
+        date,
+        sourceId: type === 'earning' ? parseInt(sourceId) : undefined,
+        groupId: type === 'expense' ? parseInt(groupId) : undefined,
+        subgroupId: type === 'expense' && subgroupId ? parseInt(subgroupId) : undefined,
+        paymentMethod: type === 'expense' ? paymentMethod : undefined,
+        note: note || undefined,
+      })
+    } else if (transactionMode === 'installment') {
       // Create multiple transactions for installments (divide value)
       const installmentValue = numValue / numCount
       const baseDate = parseDate(date)
@@ -105,7 +138,7 @@ export const TransactionForm: React.FC<TransactionFormProps> = ({ isOpen, onClos
   }
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} title="Nova Transação" size="lg">
+    <Modal isOpen={isOpen} onClose={onClose} title={transaction ? "Editar Transação" : "Nova Transação"} size="lg">
       <form onSubmit={handleSubmit} className="space-y-4">
         <div className="flex gap-2">
           <Button
@@ -126,29 +159,31 @@ export const TransactionForm: React.FC<TransactionFormProps> = ({ isOpen, onClos
           </Button>
         </div>
 
-        <div className="border border-gray-200 rounded-lg p-3">
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Tipo de Transação
-          </label>
-          <div className="grid grid-cols-2 gap-2">
-            <Button
-              type="button"
-              variant={transactionMode === 'unique' ? 'primary' : 'secondary'}
-              size="sm"
-              onClick={() => setTransactionMode('unique')}
-            >
-              Único
-            </Button>
-            <Button
-              type="button"
-              variant={transactionMode === 'installment' ? 'primary' : 'secondary'}
-              size="sm"
-              onClick={() => setTransactionMode('installment')}
-            >
-              Parcelado
-            </Button>
+        {!transaction && (
+          <div className="border border-gray-200 rounded-lg p-3">
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Tipo de Transação
+            </label>
+            <div className="grid grid-cols-2 gap-2">
+              <Button
+                type="button"
+                variant={transactionMode === 'unique' ? 'primary' : 'secondary'}
+                size="sm"
+                onClick={() => setTransactionMode('unique')}
+              >
+                Único
+              </Button>
+              <Button
+                type="button"
+                variant={transactionMode === 'installment' ? 'primary' : 'secondary'}
+                size="sm"
+                onClick={() => setTransactionMode('installment')}
+              >
+                Parcelado
+              </Button>
+            </div>
           </div>
-        </div>
+        )}
 
         <div className="grid grid-cols-2 gap-4">
           <Input
@@ -258,7 +293,7 @@ export const TransactionForm: React.FC<TransactionFormProps> = ({ isOpen, onClos
           <Button type="button" variant="secondary" onClick={onClose}>
             Cancelar
           </Button>
-          <Button type="submit">Adicionar</Button>
+          <Button type="submit">{transaction ? 'Salvar' : 'Adicionar'}</Button>
         </div>
       </form>
     </Modal>

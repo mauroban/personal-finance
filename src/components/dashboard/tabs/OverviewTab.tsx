@@ -18,17 +18,54 @@ interface OverviewTabProps {
   categories: Category[]
 }
 
+type PeriodType = 'current' | 'last1' | 'last3' | 'last6'
+
 export const OverviewTab: React.FC<OverviewTabProps> = ({
   transactions,
   budgets,
   categories,
 }) => {
   const { setViewMode } = useApp()
+  const [selectedPeriod, setSelectedPeriod] = React.useState<PeriodType>('current')
 
   // Always use current date for Overview
   const today = new Date()
   const year = today.getFullYear()
   const month = today.getMonth() + 1
+
+  // Calculate period year/month based on selection
+  const { periodYear, periodMonth } = React.useMemo(() => {
+    if (selectedPeriod === 'current') {
+      return { periodYear: year, periodMonth: month }
+    } else if (selectedPeriod === 'last1') {
+      let lastMonth = month - 1
+      let lastYear = year
+      if (lastMonth === 0) {
+        lastMonth = 12
+        lastYear -= 1
+      }
+      return { periodYear: lastYear, periodMonth: lastMonth }
+    } else if (selectedPeriod === 'last3') {
+      // For multi-month periods, use the most recent month in the range
+      let lastMonth = month - 1
+      let lastYear = year
+      if (lastMonth === 0) {
+        lastMonth = 12
+        lastYear -= 1
+      }
+      return { periodYear: lastYear, periodMonth: lastMonth }
+    } else if (selectedPeriod === 'last6') {
+      // For multi-month periods, use the most recent month in the range
+      let lastMonth = month - 1
+      let lastYear = year
+      if (lastMonth === 0) {
+        lastMonth = 12
+        lastYear -= 1
+      }
+      return { periodYear: lastYear, periodMonth: lastMonth }
+    }
+    return { periodYear: year, periodMonth: month }
+  }, [selectedPeriod, year, month])
 
   // Get YTD calculations
   const ytdSummary = useYTDCalculations(transactions, budgets, year, month)
@@ -42,8 +79,8 @@ export const OverviewTab: React.FC<OverviewTabProps> = ({
     month
   )
 
-  // Get category impact analysis
-  const categoryImpact = useCategoryImpact(transactions, budgets, categories, year, month)
+  // Get category impact analysis based on selected period
+  const categoryImpact = useCategoryImpact(transactions, budgets, categories, periodYear, periodMonth)
 
   // Calculate last 3 months trend (only months with activity)
   const last3MonthsBalance = React.useMemo(() => {
@@ -251,13 +288,19 @@ export const OverviewTab: React.FC<OverviewTabProps> = ({
         </div>
       </div>
 
-      {/* Category Impact Analysis */}
+      {/* Category Impact Analysis with Period Selector */}
       <CategoryImpactAnalysis
         categoryImpacts={categoryImpact.categoryImpacts}
         topSpenders={categoryImpact.topSpenders}
         trendingUp={categoryImpact.trendingUp}
         trendingDown={categoryImpact.trendingDown}
         totalSpent={categoryImpact.totalSpent}
+        selectedPeriod={selectedPeriod}
+        onPeriodChange={setSelectedPeriod}
+        periodYear={periodYear}
+        periodMonth={periodMonth}
+        currentYear={year}
+        currentMonth={month}
       />
 
       {/* Quick Action */}

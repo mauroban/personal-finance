@@ -37,19 +37,38 @@ export const SourceManager: React.FC = () => {
   }
 
   return (
-    <div className="card p-6">
-      <div className="flex justify-between items-center mb-4">
-        <h2 className="text-xl font-semibold text-gray-900">Fontes de Renda</h2>
-        <Button onClick={() => setIsModalOpen(true)}>Adicionar Fonte</Button>
+    <div className="bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 rounded-xl shadow-sm border border-green-200 dark:border-green-800/50 p-4 sm:p-6">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+        <div className="flex items-center gap-3">
+          <div className="p-2 bg-green-600 dark:bg-green-500 rounded-lg flex-shrink-0">
+            <svg className="w-5 h-5 sm:w-6 sm:h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+          </div>
+          <div>
+            <h2 className="text-lg sm:text-xl font-bold text-gray-900 dark:text-white">Fontes de Renda</h2>
+            <p className="text-xs text-gray-600 dark:text-gray-400">
+              Gerencie suas fontes de receita
+            </p>
+          </div>
+        </div>
+        <Button onClick={() => setIsModalOpen(true)} className="w-full sm:w-auto flex-shrink-0">+ Adicionar</Button>
       </div>
 
       <div className="space-y-2">
         {sources.map(source => (
           <div
             key={source.id}
-            className="flex justify-between items-center p-3 bg-gray-50 rounded-lg"
+            className="flex justify-between items-center p-4 bg-white dark:bg-gray-800 border-2 border-green-200 dark:border-green-700/50 rounded-xl hover:shadow-md transition-shadow"
           >
-            <span className="text-gray-900">{source.name}</span>
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-green-100 dark:bg-green-900/30 rounded-lg">
+                <svg className="w-5 h-5 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              </div>
+              <span className="text-gray-900 dark:text-white font-semibold">{source.name}</span>
+            </div>
             <Button
               variant="danger"
               size="sm"
@@ -62,9 +81,19 @@ export const SourceManager: React.FC = () => {
         ))}
 
         {sources.length === 0 && (
-          <p className="text-gray-500 text-center py-8">
-            Nenhuma fonte de renda cadastrada. Adicione sua primeira fonte!
-          </p>
+          <div className="text-center py-12">
+            <div className="mb-3">
+              <svg className="w-16 h-16 mx-auto text-gray-400 dark:text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            </div>
+            <p className="text-gray-600 dark:text-gray-400 font-medium mb-1">
+              Nenhuma fonte de renda cadastrada
+            </p>
+            <p className="text-sm text-gray-500 dark:text-gray-500">
+              Adicione sua primeira fonte para começar!
+            </p>
+          </div>
         )}
       </div>
 

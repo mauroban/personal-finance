@@ -39,23 +39,23 @@ export const BudgetPage: React.FC = () => {
   }, [selectedYear, selectedMonth, viewMode])
 
   const viewModeToggle = (
-    <div className="flex gap-2">
+    <div className="inline-flex items-center gap-1 p-1 bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-900/30 dark:to-indigo-900/30 rounded-lg border border-blue-200 dark:border-blue-800/50">
       <button
         onClick={() => setViewMode(VIEW_MODES.MONTHLY)}
-        className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+        className={`px-4 py-2 rounded-md font-semibold transition-all ${
           viewMode === VIEW_MODES.MONTHLY
-            ? 'bg-blue-600 text-white'
-            : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600'
+            ? 'bg-blue-600 text-white shadow-md scale-105'
+            : 'text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white hover:scale-102'
         }`}
       >
         Mensal
       </button>
       <button
         onClick={() => setViewMode(VIEW_MODES.YEARLY)}
-        className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+        className={`px-4 py-2 rounded-md font-semibold transition-all ${
           viewMode === VIEW_MODES.YEARLY
-            ? 'bg-blue-600 text-white'
-            : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600'
+            ? 'bg-blue-600 text-white shadow-md scale-105'
+            : 'text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white hover:scale-102'
         }`}
       >
         Anual
