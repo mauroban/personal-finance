@@ -21,6 +21,13 @@ export const BudgetPage: React.FC = () => {
     refreshBudgets,
   } = useApp()
 
+  // Ensure viewMode is set to MONTHLY or YEARLY when page loads
+  useEffect(() => {
+    if (viewMode !== VIEW_MODES.MONTHLY && viewMode !== VIEW_MODES.YEARLY) {
+      setViewMode(VIEW_MODES.MONTHLY)
+    }
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
+
   const handleMonthDrillDown = (month: number) => {
     setSelectedMonth(month)
     setViewMode(VIEW_MODES.MONTHLY)

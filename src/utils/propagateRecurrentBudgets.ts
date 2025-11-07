@@ -16,19 +16,32 @@ export const propagateRecurrentBudget = async (budget: Budget, yearsAhead: numbe
   }
 
   const endYear = budget.year + yearsAhead // Propagate specified years ahead from budget creation
-  let copiedCount = 0
-
-  const budgetKey = `${budget.type}-${budget.sourceId || ''}-${budget.groupId || ''}-${budget.subgroupId || ''}`
   const startDate = dateToMonthNumber(budget.year, budget.month)
 
-  // Get all existing budgets to avoid duplicates
-  const existingBudgets = await db.budgets.toArray()
-  const existingByMonthKey = new Map<string, Budget>()
+  // Use indexed query instead of loading all budgets
+  const existingBudgets = await db.budgets
+    .where(budget.type === 'expense' && budget.subgroupId
+      ? '[type+groupId+subgroupId]'
+      : budget.type === 'income' && budget.sourceId
+      ? '[type+sourceId]'
+      : 'type')
+    .equals(
+      budget.type === 'expense' && budget.subgroupId
+        ? [budget.type, budget.groupId || 0, budget.subgroupId]
+        : budget.type === 'income' && budget.sourceId
+        ? [budget.type, budget.sourceId]
+        : budget.type
+    )
+    .toArray()
 
+  const existingByMonthKey = new Map<string, Budget>()
   existingBudgets.forEach(b => {
-    const key = `${b.year}-${b.month}-${b.type}-${b.sourceId || ''}-${b.groupId || ''}-${b.subgroupId || ''}`
+    const key = `${b.year}-${b.month}`
     existingByMonthKey.set(key, b)
   })
+
+  // Collect all budgets to create in one batch
+  const budgetsToCreate: Omit<Budget, 'id'>[] = []
 
   // Loop through all future months
   for (let year = budget.year; year <= endYear; year++) {
@@ -42,15 +55,15 @@ export const propagateRecurrentBudget = async (budget: Budget, yearsAhead: numbe
         continue // Skip months before or equal to the budget's month
       }
 
-      const monthKey = `${year}-${month}-${budgetKey}`
+      const monthKey = `${year}-${month}`
 
       // Check if budget already exists for this month
       if (existingByMonthKey.has(monthKey)) {
         continue // Skip if already exists
       }
 
-      // Create new budget for this month
-      const newBudget: Omit<Budget, 'id'> = {
+      // Add to batch instead of writing immediately
+      budgetsToCreate.push({
         year,
         month,
         type: budget.type,
@@ -59,21 +72,21 @@ export const propagateRecurrentBudget = async (budget: Budget, yearsAhead: numbe
         sourceId: budget.sourceId,
         groupId: budget.groupId,
         subgroupId: budget.subgroupId,
-      }
-
-      await db.budgets.add(newBudget)
-      copiedCount++
+        isFixedCost: budget.isFixedCost,  // Propagate fixed cost property
+      })
     }
   }
 
-  if (copiedCount > 0) {
-    logger.info(`Propagated recurring budget to ${copiedCount} future months`, {
+  // Bulk insert all budgets at once (10-100x faster than individual inserts)
+  if (budgetsToCreate.length > 0) {
+    await db.budgets.bulkAdd(budgetsToCreate)
+    logger.info(`Propagated recurring budget to ${budgetsToCreate.length} future months`, {
       budgetId: budget.id,
-      copiedCount,
+      copiedCount: budgetsToCreate.length,
     })
   }
 
-  return copiedCount
+  return budgetsToCreate.length
 }
 
 /**
@@ -87,18 +100,31 @@ export const propagateInstallmentBudget = async (budget: Budget): Promise<number
   }
 
   const installments = budget.installments
-  let copiedCount = 0
 
-  const budgetKey = `${budget.type}-${budget.sourceId || ''}-${budget.groupId || ''}-${budget.subgroupId || ''}`
+  // Use indexed query instead of loading all budgets
+  const existingBudgets = await db.budgets
+    .where(budget.type === 'expense' && budget.subgroupId
+      ? '[type+groupId+subgroupId]'
+      : budget.type === 'income' && budget.sourceId
+      ? '[type+sourceId]'
+      : 'type')
+    .equals(
+      budget.type === 'expense' && budget.subgroupId
+        ? [budget.type, budget.groupId || 0, budget.subgroupId]
+        : budget.type === 'income' && budget.sourceId
+        ? [budget.type, budget.sourceId]
+        : budget.type
+    )
+    .toArray()
 
-  // Get existing budgets to avoid duplicates
-  const existingBudgets = await db.budgets.toArray()
   const existingByMonthKey = new Map<string, Budget>()
-
   existingBudgets.forEach(b => {
-    const key = `${b.year}-${b.month}-${b.type}-${b.sourceId || ''}-${b.groupId || ''}-${b.subgroupId || ''}`
+    const key = `${b.year}-${b.month}`
     existingByMonthKey.set(key, b)
   })
+
+  // Collect all budgets to create in one batch
+  const budgetsToCreate: Omit<Budget, 'id'>[] = []
 
   // Create installments for future months
   for (let i = 1; i < installments; i++) {
@@ -111,13 +137,13 @@ export const propagateInstallmentBudget = async (budget: Budget): Promise<number
       targetYear++
     }
 
-    const monthKey = `${targetYear}-${targetMonth}-${budgetKey}`
+    const monthKey = `${targetYear}-${targetMonth}`
 
     if (existingByMonthKey.has(monthKey)) {
       continue // Skip if already exists
     }
 
-    const newBudget: Omit<Budget, 'id'> = {
+    budgetsToCreate.push({
       year: targetYear,
       month: targetMonth,
       type: budget.type,
@@ -128,21 +154,21 @@ export const propagateInstallmentBudget = async (budget: Budget): Promise<number
       sourceId: budget.sourceId,
       groupId: budget.groupId,
       subgroupId: budget.subgroupId,
-    }
-
-    await db.budgets.add(newBudget)
-    copiedCount++
+      isFixedCost: budget.isFixedCost,  // Propagate fixed cost property
+    })
   }
 
-  if (copiedCount > 0) {
-    logger.info(`Propagated installment budget to ${copiedCount} months`, {
+  // Bulk insert all budgets at once
+  if (budgetsToCreate.length > 0) {
+    await db.budgets.bulkAdd(budgetsToCreate)
+    logger.info(`Propagated installment budget to ${budgetsToCreate.length} months`, {
       budgetId: budget.id,
-      copiedCount,
+      copiedCount: budgetsToCreate.length,
       totalInstallments: installments,
     })
   }
 
-  return copiedCount
+  return budgetsToCreate.length
 }
 
 /**

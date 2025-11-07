@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useMemo, useCallback } from 'react'
 import { useApp } from '@/context/AppContext'
 import { dateToMonthNumber, monthNumberToDate } from '@/utils/date'
 import { DEFAULT_INSTALLMENT_COUNT } from '@/constants/budgetModes'
@@ -18,14 +18,20 @@ export const BudgetEditor: React.FC<BudgetEditorProps> = ({ year, month }) => {
   const [focusedField, setFocusedField] = useState<string | null>(null)
   const [budgetModes, setBudgetModes] = useState<Record<string, 'unique' | 'recurring' | 'installment'>>({})
   const [installmentCounts, setInstallmentCounts] = useState<Record<string, number>>({})
+  const [isFixedCost, setIsFixedCost] = useState<Record<string, boolean>>({})
   const [expandedCategories, setExpandedCategories] = useState<Set<number>>(new Set())
 
-  const parentCategories = categories.filter(c => !c.parentId)
+  // Memoize parent categories to prevent unnecessary recalculations
+  const parentCategories = useMemo(
+    () => categories.filter(c => !c.parentId),
+    [categories]
+  )
 
   useEffect(() => {
     const values: Record<string, number> = {}
     const modes: Record<string, 'unique' | 'recurring' | 'installment'> = {}
     const counts: Record<string, number> = {}
+    const fixedCosts: Record<string, boolean> = {}
 
     // Load expense budgets for parent categories
     parentCategories.forEach(cat => {
@@ -44,6 +50,9 @@ export const BudgetEditor: React.FC<BudgetEditorProps> = ({ year, month }) => {
         }
         if (budget.installments) {
           counts[`expense-${cat.id}`] = budget.installments
+        }
+        if (budget.isFixedCost) {
+          fixedCosts[`expense-${cat.id}`] = true
         }
       }
 
@@ -64,6 +73,9 @@ export const BudgetEditor: React.FC<BudgetEditorProps> = ({ year, month }) => {
           }
           if (subBudget.installments) {
             counts[`expense-${cat.id}-${sub.id}`] = subBudget.installments
+          }
+          if (subBudget.isFixedCost) {
+            fixedCosts[`expense-${cat.id}-${sub.id}`] = true
           }
         }
       })
@@ -92,6 +104,7 @@ export const BudgetEditor: React.FC<BudgetEditorProps> = ({ year, month }) => {
     setBudgetValues(values)
     setBudgetModes(modes)
     setInstallmentCounts(counts)
+    setIsFixedCost(fixedCosts)
   }, [budgets, year, month, parentCategories, sources, categories])
 
   const formatCurrencyValue = (value: number): string => {
@@ -202,6 +215,7 @@ export const BudgetEditor: React.FC<BudgetEditorProps> = ({ year, month }) => {
       amount: actualValue,
       mode,
       installments: mode === 'installment' ? installmentCount : undefined,
+      isFixedCost: type === 'expense' ? (isFixedCost[key] || false) : undefined,
       ...(type === 'expense' ? { groupId, subgroupId } : { sourceId })
     }
 
@@ -234,6 +248,7 @@ export const BudgetEditor: React.FC<BudgetEditorProps> = ({ year, month }) => {
         amount: existingBudget.amount,
         mode: newMode,
         installments: newMode === 'installment' ? (installmentCounts[key] || 1) : undefined,
+        isFixedCost: type === 'expense' ? (isFixedCost[key] || false) : undefined,  // Keep fixed cost state independent of mode
         ...(type === 'expense' ? { groupId, subgroupId } : { sourceId })
       })
     }
@@ -261,8 +276,43 @@ export const BudgetEditor: React.FC<BudgetEditorProps> = ({ year, month }) => {
         amount: existingBudget.amount,
         mode: budgetModes[key],
         installments: count,
+        isFixedCost: type === 'expense' ? (isFixedCost[key] || false) : undefined,
         ...(type === 'expense' ? { groupId, subgroupId } : { sourceId })
       })
+    }
+  }
+
+  const handleFixedCostChange = (key: string, checked: boolean, type: 'expense' | 'income', groupId?: number, subgroupId?: number, sourceId?: number) => {
+    // Update UI state immediately for instant feedback
+    setIsFixedCost(prev => ({ ...prev, [key]: checked }))
+
+    const existingBudget = budgets.find(b => {
+      if (type === 'expense') {
+        return b.year === year && b.month === month &&
+               b.groupId === groupId &&
+               b.subgroupId === subgroupId &&
+               b.type === 'expense'
+      } else {
+        return b.year === year && b.month === month && b.sourceId === sourceId && b.type === 'income'
+      }
+    })
+
+    // Defer database update to next tick - completely non-blocking
+    if (existingBudget) {
+      setTimeout(() => {
+        updateBudget(existingBudget.id!, {
+          year,
+          month,
+          type,
+          amount: existingBudget.amount,
+          mode: budgetModes[key] || 'unique',  // Keep current mode, don't force recurring
+          installments: existingBudget.installments,
+          isFixedCost: type === 'expense' ? checked : undefined,
+          ...(type === 'expense' ? { groupId, subgroupId } : { sourceId })
+        }).catch(error => {
+          logger.error('Failed to update fixed cost', { error })
+        })
+      }, 0)
     }
   }
 
@@ -410,26 +460,53 @@ export const BudgetEditor: React.FC<BudgetEditorProps> = ({ year, month }) => {
     })
   }
 
-  const getSubcategories = (parentId: number) => {
-    return categories.filter(c => c.parentId === parentId)
-  }
+  // Memoize subcategories lookup to avoid repeated filtering
+  const subcategoriesByParent = useMemo(() => {
+    const map = new Map<number, typeof categories>()
+    categories.forEach(c => {
+      if (c.parentId) {
+        if (!map.has(c.parentId)) {
+          map.set(c.parentId, [])
+        }
+        map.get(c.parentId)!.push(c)
+      }
+    })
+    return map
+  }, [categories])
 
-  const getTotalForCategory = (categoryId: number): number => {
-    const mainValue = budgetValues[`expense-${categoryId}`] || 0
-    const subcats = getSubcategories(categoryId)
-    const subTotal = subcats.reduce((sum, sub) => {
-      return sum + (budgetValues[`expense-${categoryId}-${sub.id}`] || 0)
+  const getSubcategories = useCallback((parentId: number) => {
+    return subcategoriesByParent.get(parentId) || []
+  }, [subcategoriesByParent])
+
+  // Memoize category totals to avoid recalculation on every render
+  const categoryTotals = useMemo(() => {
+    const totals = new Map<number, number>()
+    parentCategories.forEach(cat => {
+      const mainValue = budgetValues[`expense-${cat.id}`] || 0
+      const subcats = getSubcategories(cat.id!)
+      const subTotal = subcats.reduce((sum, sub) => {
+        return sum + (budgetValues[`expense-${cat.id}-${sub.id}`] || 0)
+      }, 0)
+      totals.set(cat.id!, mainValue + subTotal)
+    })
+    return totals
+  }, [budgetValues, parentCategories, getSubcategories])
+
+  const getTotalForCategory = useCallback((categoryId: number): number => {
+    return categoryTotals.get(categoryId) || 0
+  }, [categoryTotals])
+
+  // Memoize total expense budget
+  const totalExpenseBudget = useMemo(() => {
+    return Array.from(categoryTotals.values()).reduce((sum, total) => sum + total, 0)
+  }, [categoryTotals])
+
+  // Memoize total income budget
+  const totalIncomeBudget = useMemo(() => {
+    return sources.reduce((sum, source) => {
+      return sum + (budgetValues[`income-${source.id}`] || 0)
     }, 0)
-    return mainValue + subTotal
-  }
-
-  const totalExpenseBudget = parentCategories.reduce((sum, cat) => {
-    return sum + getTotalForCategory(cat.id!)
-  }, 0)
-
-  const totalIncomeBudget = sources.reduce((sum, source) => {
-    return sum + (budgetValues[`income-${source.id}`] || 0)
-  }, 0)
+  }, [budgetValues, sources])
 
   return (
     <div className="space-y-6 max-w-4xl mx-auto">
@@ -582,8 +659,18 @@ export const BudgetEditor: React.FC<BudgetEditorProps> = ({ year, month }) => {
                           </div>
 
                           <div className="flex items-center gap-2 flex-wrap sm:flex-shrink-0">
+                            <label className="flex items-center gap-1 cursor-pointer">
+                              <input
+                                type="checkbox"
+                                checked={isFixedCost[subKey] || false}
+                                onChange={e => handleFixedCostChange(subKey, e.target.checked, 'expense', cat.id, sub.id)}
+                                className="w-3 h-3 text-primary-600 bg-gray-100 border-gray-300 rounded focus:ring-primary-500 focus:ring-2"
+                              />
+                              <span className="text-xs text-gray-600 dark:text-gray-400">Fixo</span>
+                            </label>
+
                             <select
-                              value={subMode}
+                              value={subMode || 'unique'}
                               onChange={e => handleModeChange(subKey, e.target.value as any, 'expense', cat.id, sub.id)}
                               className="text-xs border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded px-2 py-1.5 focus:outline-none focus:ring-2 focus:ring-blue-500"
                             >

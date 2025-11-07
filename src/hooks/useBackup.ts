@@ -19,7 +19,7 @@ export const useBackup = () => {
     }
   }
 
-  const handleImport = async (file: File) => {
+  const handleImport = async (file?: File) => {
     setIsImporting(true)
     try {
       await importData(file)

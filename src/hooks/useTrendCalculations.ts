@@ -147,9 +147,23 @@ export const useTrendCalculations = (
         .map(c => c.id!)
 
       const data: MonthDataPoint[] = periods.map(({ year, month }) => {
-        const monthTransactions = transactions.filter(t =>
-          isDateInMonth(t.date, year, month) && t.type === 'expense'
-        )
+        const monthTransactions = transactions.filter(t => {
+          if (!isDateInMonth(t.date, year, month) || t.type !== 'expense') return false
+
+          // Exclude fixed costs - check budget for this transaction
+          const matchingBudget = budgets.find(b => {
+            if (b.type !== 'expense') return false
+            if (b.year !== year || b.month !== month) return false
+
+            if (t.subgroupId) {
+              return b.groupId === t.groupId && b.subgroupId === t.subgroupId
+            } else {
+              return b.groupId === t.groupId && !b.subgroupId
+            }
+          })
+
+          return !matchingBudget?.isFixedCost
+        })
 
         const value = monthTransactions
           .filter(t =>

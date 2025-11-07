@@ -52,7 +52,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   const [selectedMonth, setSelectedMonth] = useState(getCurrentMonth())
   const [viewMode, setViewModeState] = useState<ViewMode>(() => {
     const stored = localStorage.getItem('viewMode')
-    return (stored as ViewMode) || VIEW_MODES.MONTHLY
+    return (stored as ViewMode) || VIEW_MODES.OVERVIEW
   })
 
   const setViewMode = (mode: ViewMode) => {
@@ -188,18 +188,30 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       const { propagateBudget } = await import('@/utils/propagateRecurrentBudgets')
       const fullBudget = await db.budgets.get(id)
       if (fullBudget) {
-        // First delete all future instances of this budget
-        const budgetKey = `${budget.type}-${budget.sourceId || ''}-${budget.groupId || ''}-${budget.subgroupId || ''}`
-        const allBudgets = await db.budgets.toArray()
-        const futureBudgets = allBudgets.filter(b => {
-          if (b.id === id) return false // Don't delete the current budget
-          const key = `${b.type}-${b.sourceId || ''}-${b.groupId || ''}-${b.subgroupId || ''}`
-          return key === budgetKey &&
-                 (b.year > fullBudget.year || (b.year === fullBudget.year && b.month > fullBudget.month))
-        })
+        // Use indexed query to find future instances
+        const futureBudgets = await db.budgets
+          .where(budget.type === 'expense' && budget.subgroupId
+            ? '[type+groupId+subgroupId]'
+            : budget.type === 'income' && budget.sourceId
+            ? '[type+sourceId]'
+            : 'type')
+          .equals(
+            budget.type === 'expense' && budget.subgroupId
+              ? [budget.type, budget.groupId || 0, budget.subgroupId]
+              : budget.type === 'income' && budget.sourceId
+              ? [budget.type, budget.sourceId]
+              : budget.type
+          )
+          .filter(b =>
+            b.id !== id && // Don't delete the current budget
+            (b.year > fullBudget.year || (b.year === fullBudget.year && b.month > fullBudget.month))
+          )
+          .toArray()
 
-        for (const fb of futureBudgets) {
-          if (fb.id) await db.budgets.delete(fb.id)
+        // Use bulk delete for better performance
+        const idsToDelete = futureBudgets.map(fb => fb.id!).filter(fbId => fbId !== undefined)
+        if (idsToDelete.length > 0) {
+          await db.budgets.bulkDelete(idsToDelete)
         }
 
         // Then propagate the updated budget
@@ -214,24 +226,35 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     const budget = await db.budgets.get(id)
 
     if (budget && (budget.mode === 'recurring' || budget.mode === 'installment')) {
-      // For recurring/installment budgets, also delete all future instances
-      const budgetKey = `${budget.type}-${budget.sourceId || ''}-${budget.groupId || ''}-${budget.subgroupId || ''}`
-      const allBudgets = await db.budgets.toArray()
+      // Use indexed query to find future instances
+      const futureBudgets = await db.budgets
+        .where(budget.type === 'expense' && budget.subgroupId
+          ? '[type+groupId+subgroupId]'
+          : budget.type === 'income' && budget.sourceId
+          ? '[type+sourceId]'
+          : 'type')
+        .equals(
+          budget.type === 'expense' && budget.subgroupId
+            ? [budget.type, budget.groupId || 0, budget.subgroupId]
+            : budget.type === 'income' && budget.sourceId
+            ? [budget.type, budget.sourceId]
+            : budget.type
+        )
+        .filter(b =>
+          b.id === id || // Include the current budget
+          (b.year > budget.year || (b.year === budget.year && b.month >= budget.month))
+        )
+        .toArray()
 
-      const futureBudgets = allBudgets.filter(b => {
-        if (b.id === id) return true // Include the current budget
-        const key = `${b.type}-${b.sourceId || ''}-${b.groupId || ''}-${b.subgroupId || ''}`
-        return key === budgetKey &&
-               (b.year > budget.year || (b.year === budget.year && b.month >= budget.month))
-      })
-
-      for (const fb of futureBudgets) {
-        if (fb.id) await db.budgets.delete(fb.id)
+      // Use bulk delete for better performance
+      const idsToDelete = futureBudgets.map(fb => fb.id!).filter(fbId => fbId !== undefined)
+      if (idsToDelete.length > 0) {
+        await db.budgets.bulkDelete(idsToDelete)
       }
 
       logger.info('Deleted recurring/installment budget and future instances', {
         budgetId: id,
-        futureInstancesCount: futureBudgets.length - 1,
+        futureInstancesCount: idsToDelete.length - 1,
       })
     } else {
       await db.budgets.delete(id)

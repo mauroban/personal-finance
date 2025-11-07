@@ -35,6 +35,7 @@ export interface Budget {
   mode?: 'unique' | 'recurring' | 'installment'
   installments?: number
   installmentNumber?: number
+  isFixedCost?: boolean
   // Legacy support
   isRecurrent?: boolean
 }

@@ -3,6 +3,7 @@ import { Link, useLocation } from 'react-router-dom'
 import { useBackup } from '@/hooks/useBackup'
 import { Button } from '@/components/common/Button'
 import { AlertModal } from '@/components/common/AlertModal'
+import { isTauriApp } from '@/utils/tauriHelpers'
 
 export const Navbar: React.FC = () => {
   const location = useLocation()
@@ -14,6 +15,27 @@ export const Navbar: React.FC = () => {
   })
 
   const isActive = (path: string) => location.pathname === path
+
+  const handleImportClick = async () => {
+    // Desktop mode: Call import directly (will show Tauri dialog)
+    if (isTauriApp()) {
+      try {
+        await handleImport()
+      } catch (error) {
+        const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido'
+        // Don't show error if user cancelled
+        if (errorMessage !== 'Import cancelled') {
+          setErrorModal({
+            isOpen: true,
+            message: errorMessage,
+          })
+        }
+      }
+    } else {
+      // Web mode: Show file input
+      setShowImport(true)
+    }
+  }
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
@@ -104,7 +126,7 @@ export const Navbar: React.FC = () => {
             <Button
               variant="secondary"
               size="sm"
-              onClick={() => setShowImport(true)}
+              onClick={handleImportClick}
               disabled={isImporting}
             >
               {isImporting ? (

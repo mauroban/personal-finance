@@ -132,14 +132,59 @@ export const OverviewTab: React.FC<OverviewTabProps> = ({
     return 'neutral'
   }, [last3MonthsBalance])
 
-  // Calculate spending insights
+  // Calculate spending insights (excluding fixed costs for better behavior analysis)
   const spendingInsights = React.useMemo(() => {
     const today = new Date()
     const isCurrentMonth = today.getFullYear() === year && today.getMonth() + 1 === month
     const daysInMonth = new Date(year, month, 0).getDate()
     const daysElapsed = isCurrentMonth ? today.getDate() : daysInMonth
 
-    // Calculate 3-month average spending (excluding current month and empty months)
+    // Get current month transactions
+    const currentMonthTransactions = transactions.filter(t => {
+      const date = new Date(t.date)
+      return date.getFullYear() === year && date.getMonth() + 1 === month
+    })
+
+    // Get current month budgets
+    const currentMonthBudgets = budgets.filter(b => b.year === year && b.month === month && b.type === 'expense')
+
+    // Calculate budgeted amounts for fixed and variable costs
+    const fixedBudgeted = currentMonthBudgets
+      .filter(b => b.isFixedCost)
+      .reduce((sum, b) => sum + b.amount, 0)
+    const variableBudgeted = currentMonthBudgets
+      .filter(b => !b.isFixedCost)
+      .reduce((sum, b) => sum + b.amount, 0)
+
+    // Helper function to check if a transaction is a fixed cost based on its budget
+    const isTransactionFixedCost = (transaction: Transaction): boolean => {
+      if (transaction.type !== 'expense') return false
+
+      // Find matching budget for this transaction's category
+      const matchingBudget = budgets.find(b => {
+        if (b.type !== 'expense') return false
+        if (b.year !== year || b.month !== month) return false
+
+        // Match by subcategory if available, otherwise by group
+        if (transaction.subgroupId) {
+          return b.groupId === transaction.groupId && b.subgroupId === transaction.subgroupId
+        } else {
+          return b.groupId === transaction.groupId && !b.subgroupId
+        }
+      })
+
+      return matchingBudget?.isFixedCost || false
+    }
+
+    // Separate fixed and variable expenses for current month
+    const fixedExpenses = currentMonthTransactions
+      .filter(t => t.type === 'expense' && isTransactionFixedCost(t))
+      .reduce((sum, t) => sum + t.value, 0)
+    const variableExpenses = currentMonthTransactions
+      .filter(t => t.type === 'expense' && !isTransactionFixedCost(t))
+      .reduce((sum, t) => sum + t.value, 0)
+
+    // Calculate 3-month average spending (excluding fixed costs and current month)
     let avgMonthlySpending = 0
     let monthsCount = 0
     for (let i = 1; i <= 10 && monthsCount < 3; i++) { // Look back up to 10 months to find 3 with activity
@@ -172,8 +217,25 @@ export const OverviewTab: React.FC<OverviewTabProps> = ({
         continue
       }
 
+      // Exclude fixed costs from historical average for better spending pattern analysis
       const monthSpent = monthTransactions
-        .filter(t => t.type === 'expense')
+        .filter(t => {
+          if (t.type !== 'expense') return false
+
+          // Check if this transaction is a fixed cost based on its budget
+          const matchingBudget = budgets.find(b => {
+            if (b.type !== 'expense') return false
+            if (b.year !== targetYear || b.month !== targetMonth) return false
+
+            if (t.subgroupId) {
+              return b.groupId === t.groupId && b.subgroupId === t.subgroupId
+            } else {
+              return b.groupId === t.groupId && !b.subgroupId
+            }
+          })
+
+          return !matchingBudget?.isFixedCost
+        })
         .reduce((sum, t) => sum + t.value, 0)
 
       avgMonthlySpending += monthSpent
@@ -181,26 +243,31 @@ export const OverviewTab: React.FC<OverviewTabProps> = ({
     }
     avgMonthlySpending = monthsCount > 0 ? avgMonthlySpending / monthsCount : 0
 
-    // Project spending for rest of month based on current daily average
-    const dailyAverage = daysElapsed > 0 ? monthSummary.totalExpense / daysElapsed : 0
-    const projectedSpending = isCurrentMonth
+    // Project spending for rest of month based on variable expenses only
+    const dailyAverage = daysElapsed > 0 ? variableExpenses / daysElapsed : 0
+    const projectedVariableSpending = isCurrentMonth
       ? (dailyAverage * daysInMonth)
-      : monthSummary.totalExpense
+      : variableExpenses
+    const projectedTotalSpending = projectedVariableSpending + fixedExpenses
 
     const isOnTrack = monthSummary.budgetedExpense > 0
-      ? projectedSpending <= monthSummary.budgetedExpense
+      ? projectedTotalSpending <= monthSummary.budgetedExpense
       : true
 
     return {
-      totalSpent: monthSummary.totalExpense,
+      totalSpent: variableExpenses, // Only variable expenses for insights
       totalBudgeted: monthSummary.budgetedExpense,
       avgMonthlySpending,
       daysInMonth,
       daysElapsed,
-      projectedSpending,
+      projectedSpending: projectedVariableSpending, // Project only variable spending
       isOnTrack,
+      fixedExpenses, // Pass separately
+      fixedBudgeted, // Budgeted fixed costs
+      variableBudgeted, // Budgeted variable costs
+      totalExpenses: monthSummary.totalExpense, // Total including fixed
     }
-  }, [transactions, monthSummary, year, month])
+  }, [transactions, budgets, monthSummary, year, month])
 
   return (
     <div className="space-y-6">
@@ -246,6 +313,47 @@ export const OverviewTab: React.FC<OverviewTabProps> = ({
           />
         </div>
       </div>
+
+      {/* Fixed vs Variable Costs Breakdown */}
+      {spendingInsights.totalExpenses > 0 && (
+        <div className="card p-6">
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+            Custos Fixos vs Variáveis
+          </h3>
+          <div className="grid grid-cols-2 gap-4">
+            <div className="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-4">
+              <div className="flex items-center gap-2 mb-2">
+                <span className="text-2xl">📌</span>
+                <span className="text-sm text-gray-600 dark:text-gray-400">Custos Fixos</span>
+              </div>
+              <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">
+                {formatCurrency(spendingInsights.fixedExpenses)}
+              </div>
+              <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                de {formatCurrency(spendingInsights.fixedBudgeted)} orçado
+              </div>
+              <div className="text-xs text-gray-500 dark:text-gray-400">
+                {spendingInsights.totalExpenses > 0 ? ((spendingInsights.fixedExpenses / spendingInsights.totalExpenses) * 100).toFixed(0) : 0}% do total
+              </div>
+            </div>
+            <div className="bg-purple-50 dark:bg-purple-900/20 rounded-lg p-4">
+              <div className="flex items-center gap-2 mb-2">
+                <span className="text-2xl">💸</span>
+                <span className="text-sm text-gray-600 dark:text-gray-400">Gastos Variáveis</span>
+              </div>
+              <div className="text-2xl font-bold text-purple-600 dark:text-purple-400">
+                {formatCurrency(spendingInsights.totalSpent)}
+              </div>
+              <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                de {formatCurrency(spendingInsights.variableBudgeted)} orçado
+              </div>
+              <div className="text-xs text-gray-500 dark:text-gray-400">
+                {spendingInsights.totalExpenses > 0 ? ((spendingInsights.totalSpent / spendingInsights.totalExpenses) * 100).toFixed(0) : 0}% do total
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Quick Insights Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
