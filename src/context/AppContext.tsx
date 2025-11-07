@@ -19,7 +19,7 @@ interface AppContextType {
   viewMode: ViewMode
 
   // Actions
-  setSelectedYear: (year: number) => void
+  setSelectedYear: (year: number) => Promise<void>
   setSelectedMonth: (month: number) => void
   setViewMode: (mode: ViewMode) => void
   refreshCategories: () => Promise<void>
@@ -58,6 +58,19 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   const setViewMode = (mode: ViewMode) => {
     setViewModeState(mode)
     localStorage.setItem('viewMode', mode)
+  }
+
+  const handleSetSelectedYear = async (year: number) => {
+    setSelectedYear(year)
+
+    // Ensure recurring budgets are propagated to this year
+    const { ensureRecurringBudgetsForYear } = await import('@/utils/propagateRecurrentBudgets')
+    const extended = await ensureRecurringBudgetsForYear(year)
+
+    if (extended > 0) {
+      // Refresh budgets if any were extended
+      await refreshBudgets()
+    }
   }
 
   const refreshCategories = async () => {
@@ -243,7 +256,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         viewMode,
 
         // Actions
-        setSelectedYear,
+        setSelectedYear: handleSetSelectedYear,
         setSelectedMonth,
         setViewMode,
         refreshCategories,

@@ -3,6 +3,7 @@ import { PageContainer } from '@/components/layout/PageContainer'
 import { CategoryManager } from '@/components/setup/CategoryManager'
 import { SourceManager } from '@/components/setup/SourceManager'
 import { DatabaseReset } from '@/components/setup/DatabaseReset'
+import { DataPrivacyWarning } from '@/components/common/DataPrivacyWarning'
 
 export const SetupPage: React.FC = () => {
   return (
@@ -11,6 +12,7 @@ export const SetupPage: React.FC = () => {
       description="Configure suas categorias de despesas e fontes de renda"
     >
       <div className="space-y-6">
+        <DataPrivacyWarning />
         <CategoryManager />
         <SourceManager />
         <DatabaseReset />

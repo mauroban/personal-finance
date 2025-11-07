@@ -52,8 +52,8 @@ This app can be built as a **native desktop application** for Windows and macOS 
 ### Ready-to-Install Desktop Builds
 
 **Windows Installers (Built & Ready):**
-- **MSI:** `src-tauri/target/release/bundle/msi/Simple Budget Tracker_1.0.0_x64_en-US.msi`
-- **NSIS:** `src-tauri/target/release/bundle/nsis/Simple Budget Tracker_1.0.0_x64-setup.exe`
+- **MSI:** `src-tauri/target/release/bundle/msi/Simple Budget Tracker_1.0.1_x64_en-US.msi`
+- **NSIS:** `src-tauri/target/release/bundle/nsis/Simple Budget Tracker_1.0.1_x64-setup.exe`
 
 **App Icon:** A placeholder icon (blue with "$" symbol) is included. See [ICONS.md](./ICONS.md) for customization instructions.
 
@@ -78,8 +78,8 @@ npm run tauri icon app-icon.svg
 ```
 
 **Output:**
-- **Windows:** `src-tauri/target/release/bundle/msi/Simple Budget Tracker_1.0.0_x64_en-US.msi`
-- **macOS:** `src-tauri/target/release/bundle/dmg/Simple Budget Tracker_1.0.0_x64.dmg`
+- **Windows:** `src-tauri/target/release/bundle/msi/Simple Budget Tracker_1.0.1_x64_en-US.msi`
+- **macOS:** `src-tauri/target/release/bundle/dmg/Simple Budget Tracker_1.0.1_x64.dmg`
 
 📖 **Full desktop build guide:** See [DESKTOP-BUILD.md](./DESKTOP-BUILD.md) for complete instructions, troubleshooting, and distribution tips.
 

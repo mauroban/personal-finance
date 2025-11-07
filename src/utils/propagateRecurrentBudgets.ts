@@ -1,21 +1,21 @@
 import { db } from '@/db'
 import { Budget } from '@/types'
-import { dateToMonthNumber, getCurrentYear } from './date'
+import { dateToMonthNumber } from './date'
 import { logger } from './logger'
 
 /**
  * Propagates a recurring budget to all future months
- * Copies from the budget's month until the end of next year
+ * Copies from the budget's month until 10 years into the future
  *
  * @param budget - The budget to propagate (must have mode='recurring')
+ * @param yearsAhead - Number of years to propagate ahead (default: 10)
  */
-export const propagateRecurrentBudget = async (budget: Budget): Promise<number> => {
+export const propagateRecurrentBudget = async (budget: Budget, yearsAhead: number = 10): Promise<number> => {
   if (budget.mode !== 'recurring') {
     return 0 // Only propagate recurring budgets
   }
 
-  const currentYear = getCurrentYear()
-  const endYear = currentYear + 2 // Propagate until end of next year
+  const endYear = budget.year + yearsAhead // Propagate specified years ahead from budget creation
   let copiedCount = 0
 
   const budgetKey = `${budget.type}-${budget.sourceId || ''}-${budget.groupId || ''}-${budget.subgroupId || ''}`
@@ -156,4 +156,56 @@ export const propagateBudget = async (budget: Budget): Promise<number> => {
     return await propagateInstallmentBudget(budget)
   }
   return 0
+}
+
+/**
+ * Extends recurring budgets to cover a target year if not already propagated
+ * Useful when users navigate to future years
+ *
+ * @param targetYear - The year that needs to have budgets propagated to
+ */
+export const ensureRecurringBudgetsForYear = async (targetYear: number): Promise<number> => {
+  const allBudgets = await db.budgets.toArray()
+  const recurringBudgets = allBudgets.filter(b => b.mode === 'recurring')
+
+  // Group recurring budgets by their unique key (type, sourceId, groupId, subgroupId)
+  const budgetsByKey = new Map<string, Budget[]>()
+
+  recurringBudgets.forEach(budget => {
+    const key = `${budget.type}-${budget.sourceId || ''}-${budget.groupId || ''}-${budget.subgroupId || ''}`
+    if (!budgetsByKey.has(key)) {
+      budgetsByKey.set(key, [])
+    }
+    budgetsByKey.get(key)!.push(budget)
+  })
+
+  let totalExtended = 0
+
+  // For each recurring budget group, check if it needs extension
+  for (const [, budgets] of budgetsByKey) {
+    // Find the earliest budget (the source of the recurrence)
+    const earliestBudget = budgets.reduce((earliest, current) => {
+      const earliestDate = dateToMonthNumber(earliest.year, earliest.month)
+      const currentDate = dateToMonthNumber(current.year, current.month)
+      return currentDate < earliestDate ? current : earliest
+    })
+
+    // Find the latest propagated year for this budget
+    const latestYear = Math.max(...budgets.map(b => b.year))
+
+    // If the target year is beyond what we've propagated, extend it
+    if (targetYear > latestYear) {
+      const yearsToExtend = targetYear - earliestBudget.year + 2 // Add buffer of 2 years
+      const extended = await propagateRecurrentBudget(earliestBudget, yearsToExtend)
+      totalExtended += extended
+    }
+  }
+
+  if (totalExtended > 0) {
+    logger.info(`Extended recurring budgets to year ${targetYear}`, {
+      budgetsExtended: totalExtended,
+    })
+  }
+
+  return totalExtended
 }

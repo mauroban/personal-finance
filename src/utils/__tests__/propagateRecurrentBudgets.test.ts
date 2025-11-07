@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach } from 'vitest'
 import { db } from '@/db'
-import { propagateBudget, propagateRecurrentBudget, propagateInstallmentBudget } from '../propagateRecurrentBudgets'
+import { propagateBudget, propagateRecurrentBudget, propagateInstallmentBudget, ensureRecurringBudgetsForYear } from '../propagateRecurrentBudgets'
 import { Budget } from '@/types'
 
 describe('propagateRecurrentBudgets', () => {
@@ -215,6 +215,55 @@ describe('propagateRecurrentBudgets', () => {
       const count = await propagateBudget(budget)
 
       expect(count).toBe(0)
+    })
+  })
+
+  describe('ensureRecurringBudgetsForYear', () => {
+    it('should extend recurring budgets to target year', async () => {
+      const budget: Budget = {
+        id: 1,
+        year: 2024,
+        month: 1,
+        type: 'expense',
+        groupId: 1,
+        amount: 1000,
+        mode: 'recurring',
+      }
+
+      await db.budgets.add(budget)
+      await propagateRecurrentBudget(budget, 2) // Only propagate 2 years initially
+
+      // Now ensure budgets exist for 2030
+      const extended = await ensureRecurringBudgetsForYear(2030)
+
+      expect(extended).toBeGreaterThan(0)
+
+      // Check that budgets were created for 2030
+      const budgets2030 = await db.budgets
+        .where({ year: 2030, groupId: 1 })
+        .toArray()
+
+      expect(budgets2030.length).toBeGreaterThan(0)
+    })
+
+    it('should not extend if target year is already covered', async () => {
+      const budget: Budget = {
+        id: 1,
+        year: 2024,
+        month: 1,
+        type: 'expense',
+        groupId: 1,
+        amount: 1000,
+        mode: 'recurring',
+      }
+
+      await db.budgets.add(budget)
+      await propagateRecurrentBudget(budget, 10) // Propagate 10 years
+
+      // Try to ensure budgets for 2026 (already covered)
+      const extended = await ensureRecurringBudgetsForYear(2026)
+
+      expect(extended).toBe(0)
     })
   })
 })

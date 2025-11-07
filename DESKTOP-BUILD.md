@@ -74,7 +74,7 @@ npm run tauri:build
 
 **Output location:**
 ```
-src-tauri/target/release/bundle/msi/Simple Budget Tracker_1.0.0_x64_en-US.msi
+src-tauri/target/release/bundle/msi/Simple Budget Tracker_1.0.1_x64_en-US.msi
 ```
 
 **Installer size:** ~60-80 MB
@@ -93,8 +93,8 @@ npm run tauri:build
 
 **Output location:**
 ```
-src-tauri/target/release/bundle/dmg/Simple Budget Tracker_1.0.0_aarch64.dmg  (Apple Silicon)
-src-tauri/target/release/bundle/dmg/Simple Budget Tracker_1.0.0_x64.dmg      (Intel)
+src-tauri/target/release/bundle/dmg/Simple Budget Tracker_1.0.1_aarch64.dmg  (Apple Silicon)
+src-tauri/target/release/bundle/dmg/Simple Budget Tracker_1.0.1_x64.dmg      (Intel)
 ```
 
 **Installer size:** ~80-100 MB
@@ -253,9 +253,9 @@ Always distribute Release builds to users!
 1. ✅ Tauri is configured
 2. ✅ Rust installed (v1.91.0)
 3. ✅ App icons created (placeholder blue "$" icon)
-4. ✅ Build complete! Installers ready at:
-   - **MSI:** `src-tauri/target/release/bundle/msi/Simple Budget Tracker_1.0.0_x64_en-US.msi`
-   - **NSIS:** `src-tauri/target/release/bundle/nsis/Simple Budget Tracker_1.0.0_x64-setup.exe`
+4. ✅ Build complete! v1.0.1 Installers ready at:
+   - **MSI:** `src-tauri/target/release/bundle/msi/Simple Budget Tracker_1.0.1_x64_en-US.msi`
+   - **NSIS:** `src-tauri/target/release/bundle/nsis/Simple Budget Tracker_1.0.1_x64-setup.exe`
 5. ⏳ Test installer on Windows
 6. ⏳ (Optional) Customize app icon: Edit `app-icon.svg` and run `npm run tauri icon app-icon.svg`
 7. ⏳ Distribute to users!
