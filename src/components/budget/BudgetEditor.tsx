@@ -536,7 +536,7 @@ export const BudgetEditor: React.FC<BudgetEditorProps> = ({ year, month }) => {
                       }
                     }}
                     onBlur={() => handleBlur(key, 'income', undefined, undefined, source.id)}
-                    className="w-32 sm:ml-4 text-sm border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-blue-500 placeholder:text-gray-400 dark:placeholder:text-gray-500 text-right font-semibold"
+                    className="w-full sm:w-32 sm:ml-4 text-sm min-h-[44px] sm:min-h-0 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-blue-500 placeholder:text-gray-400 dark:placeholder:text-gray-500 text-right font-semibold"
                     placeholder="R$ 0,00"
                     readOnly
                   />
@@ -652,7 +652,7 @@ export const BudgetEditor: React.FC<BudgetEditorProps> = ({ year, month }) => {
                                 }
                               }}
                               onBlur={() => handleBlur(subKey, 'expense', cat.id, sub.id)}
-                              className="w-32 sm:ml-4 text-sm border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-blue-500 placeholder:text-gray-400 dark:placeholder:text-gray-500 text-right font-semibold"
+                              className="w-full sm:w-32 sm:ml-4 text-sm min-h-[44px] sm:min-h-0 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-blue-500 placeholder:text-gray-400 dark:placeholder:text-gray-500 text-right font-semibold"
                               placeholder="R$ 0,00"
                               readOnly
                             />

@@ -58,10 +58,13 @@ export const Navbar: React.FC = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
           <div className="flex items-center space-x-8">
-            <Link to="/" className="text-xl font-bold bg-gradient-to-r from-primary-600 to-primary-500 bg-clip-text text-transparent flex items-center gap-2">
-              <span className="text-2xl">💰</span> Budget Tracker
+            <Link to="/" className="text-lg sm:text-xl font-bold bg-gradient-to-r from-primary-600 to-primary-500 bg-clip-text text-transparent flex items-center gap-2">
+              <span className="text-xl sm:text-2xl">💰</span>
+              <span className="hidden sm:inline">Budget Tracker</span>
+              <span className="sm:hidden">Budget</span>
             </Link>
-            <div className="flex space-x-2">
+            {/* Desktop Navigation - Hidden on mobile (bottom nav used instead) */}
+            <div className="hidden md:flex space-x-2">
               <Link
                 to="/"
                 className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${

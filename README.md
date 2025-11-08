@@ -103,6 +103,31 @@ npm run tauri icon app-icon.svg
 
 📖 **Full desktop build guide:** See [DESKTOP-BUILD.md](./DESKTOP-BUILD.md) for complete instructions, troubleshooting, and distribution tips.
 
+## 🌐 Web Deployment
+
+Deploy your app to the web **for free** in minutes!
+
+### GitHub Pages (Recommended - Already Configured)
+
+```bash
+# Deploy in one command
+npm run deploy
+```
+
+Your app will be live at: `https://mauroban.github.io/personal-finance/`
+
+**First time?** Enable GitHub Pages:
+1. Go to your repo settings → Pages
+2. Select source: `gh-pages` branch
+3. Save and wait 1-2 minutes
+
+### Other Free Options
+- **Netlify** - Drag & drop deployment
+- **Vercel** - Zero-config deployment
+- **Cloudflare Pages** - Unlimited bandwidth
+
+📖 **Full deployment guide:** See [DEPLOYMENT.md](./DEPLOYMENT.md) for all options, custom domains, and troubleshooting.
+
 ## ✨ Key Feature: Yearly Planning
 
 This app now includes comprehensive **yearly view capabilities** for both Dashboard and Budget pages:

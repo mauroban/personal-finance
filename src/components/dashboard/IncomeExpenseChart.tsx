@@ -3,6 +3,8 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, Responsive
 import { formatCurrency } from '@/utils/format'
 import { MonthSummary } from '@/types'
 import { TooltipProps } from '@/types/recharts'
+import { useDeviceType } from '@/hooks/useMediaQuery'
+import { getResponsiveChartHeight, getResponsiveFontSize, getResponsiveLegendConfig, getResponsiveMargin, getResponsiveAxisConfig, shouldShowGrid } from '@/utils/chartConfig'
 
 interface IncomeExpenseChartProps {
   monthSummary: MonthSummary
@@ -15,6 +17,8 @@ interface ChartData {
 }
 
 export const IncomeExpenseChart: React.FC<IncomeExpenseChartProps> = ({ monthSummary }) => {
+  const { isMobile } = useDeviceType()
+
   const data: ChartData[] = [
     {
       name: 'Receitas',
@@ -47,29 +51,29 @@ export const IncomeExpenseChart: React.FC<IncomeExpenseChartProps> = ({ monthSum
   }
 
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
-      <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+    <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-4 sm:p-6">
+      <h3 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-white mb-3 sm:mb-4">
         Comparativo: Planejado vs Real
       </h3>
-      <ResponsiveContainer width="100%" height={300}>
-        <BarChart data={data} layout="horizontal">
-          <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+      <ResponsiveContainer width="100%" height={getResponsiveChartHeight(isMobile, 300)}>
+        <BarChart data={data} layout="horizontal" margin={getResponsiveMargin(isMobile)}>
+          {shouldShowGrid(isMobile) && <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />}
           <XAxis
             type="category"
             dataKey="name"
             stroke="#6b7280"
-            style={{ fontSize: '14px' }}
+            {...getResponsiveAxisConfig(isMobile)}
           />
           <YAxis
             type="number"
             stroke="#6b7280"
-            style={{ fontSize: '12px' }}
-            tickFormatter={(value) => `R$ ${(value / 1000).toFixed(0)}k`}
+            tick={{ fontSize: getResponsiveFontSize(isMobile) }}
+            tickFormatter={(value) => isMobile ? `${(value / 1000).toFixed(0)}k` : `R$ ${(value / 1000).toFixed(0)}k`}
           />
           <Tooltip content={<CustomTooltip />} />
-          <Legend />
-          <Bar dataKey="Planejado" fill="#93c5fd" radius={[8, 8, 8, 8]} />
-          <Bar dataKey="Real" fill="#3b82f6" radius={[8, 8, 8, 8]} />
+          <Legend {...getResponsiveLegendConfig(isMobile)} />
+          <Bar dataKey="Planejado" fill="#93c5fd" radius={isMobile ? [4, 4, 4, 4] : [8, 8, 8, 8]} />
+          <Bar dataKey="Real" fill="#3b82f6" radius={isMobile ? [4, 4, 4, 4] : [8, 8, 8, 8]} />
         </BarChart>
       </ResponsiveContainer>
     </div>

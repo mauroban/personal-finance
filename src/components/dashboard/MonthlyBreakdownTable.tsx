@@ -2,6 +2,8 @@ import React from 'react'
 import { useYearlyCalculations } from '@/hooks/useYearlyCalculations'
 import { Transaction, Budget, Category } from '@/types'
 import { formatCurrency } from '@/utils/format'
+import { useDeviceType } from '@/hooks/useMediaQuery'
+import { MonthCard } from './MonthCard'
 
 interface MonthlyBreakdownTableProps {
   transactions: Transaction[]
@@ -19,19 +21,72 @@ export const MonthlyBreakdownTable: React.FC<MonthlyBreakdownTableProps> = ({
   onMonthClick,
 }) => {
   const { yearlySummary } = useYearlyCalculations(transactions, budgets, categories, year)
+  const { isMobile } = useDeviceType()
 
   return (
     <div className="bg-white dark:bg-gray-800 rounded-lg shadow overflow-hidden">
-      <div className="p-6">
-        <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">
+      <div className="p-4 sm:p-6">
+        <h2 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white mb-2 sm:mb-4">
           Breakdown Mensal {year}
         </h2>
-        <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
-          Clique em qualquer mês para ver detalhes
+        <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400 mb-4">
+          {isMobile ? 'Toque' : 'Clique'} em qualquer mês para ver detalhes
         </p>
       </div>
 
-      <div className="overflow-x-auto">
+      {/* Mobile Card View */}
+      {isMobile ? (
+        <div className="p-4 space-y-3">
+          {yearlySummary.monthlyBreakdowns.map((breakdown) => (
+            <MonthCard
+              key={breakdown.month}
+              monthName={breakdown.monthName}
+              income={breakdown.income}
+              expense={breakdown.expense}
+              budgetedIncome={breakdown.budgetedIncome}
+              budgetedExpense={breakdown.budgetedExpense}
+              netBalance={breakdown.netBalance}
+              incomeVariance={breakdown.incomeVariance}
+              expenseVariance={breakdown.expenseVariance}
+              isFuture={breakdown.isFuture}
+              onClick={() => onMonthClick(breakdown.month)}
+            />
+          ))}
+
+          {/* Total Card */}
+          <div className="bg-gray-100 dark:bg-gray-700 rounded-xl p-4 mt-4">
+            <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-3">
+              TOTAL {year}
+            </h3>
+            <div className="space-y-2">
+              <div className="flex justify-between items-center">
+                <span className="text-sm text-gray-600 dark:text-gray-400">Saldo Líquido:</span>
+                <span
+                  className={`text-lg font-bold ${
+                    yearlySummary.netBalance >= 0 ? 'text-green-600' : 'text-red-600'
+                  }`}
+                >
+                  {formatCurrency(yearlySummary.netBalance)}
+                </span>
+              </div>
+              <div className="flex justify-between items-center text-sm">
+                <span className="text-gray-600 dark:text-gray-400">Receita Total:</span>
+                <span className="font-semibold text-green-600">
+                  {formatCurrency(yearlySummary.totalIncome)}
+                </span>
+              </div>
+              <div className="flex justify-between items-center text-sm">
+                <span className="text-gray-600 dark:text-gray-400">Despesa Total:</span>
+                <span className="font-semibold text-red-600">
+                  {formatCurrency(yearlySummary.totalExpense)}
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+      ) : (
+        /* Desktop Table View */
+        <div className="overflow-x-auto">
         <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
           <thead className="bg-gray-50 dark:bg-gray-700">
             <tr>
@@ -158,6 +213,7 @@ export const MonthlyBreakdownTable: React.FC<MonthlyBreakdownTableProps> = ({
           </tbody>
         </table>
       </div>
+      )}
     </div>
   )
 }

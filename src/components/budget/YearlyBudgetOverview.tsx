@@ -2,6 +2,8 @@ import React from 'react'
 import { Budget, Category, Source } from '@/types'
 import { formatCurrency } from '@/utils/format'
 import { getMonthName } from '@/utils/date'
+import { useDeviceType } from '@/hooks/useMediaQuery'
+import { CategoryAccordion } from './CategoryAccordion'
 
 interface YearlyBudgetOverviewProps {
   budgets: Budget[]
@@ -18,6 +20,7 @@ export const YearlyBudgetOverview: React.FC<YearlyBudgetOverviewProps> = ({
   year,
   onMonthClick,
 }) => {
+  const { isMobile } = useDeviceType()
   const parentCategories = categories.filter(c => !c.parentId)
 
   const getMonthBudgets = (month: number) => {
@@ -136,12 +139,22 @@ export const YearlyBudgetOverview: React.FC<YearlyBudgetOverviewProps> = ({
               Orçamento por Categoria
             </h2>
             <p className="text-xs text-gray-600 dark:text-gray-400">
-              Distribuição mensal das categorias ao longo do ano
+              {isMobile ? 'Toque para expandir categorias' : 'Distribuição mensal das categorias ao longo do ano'}
             </p>
           </div>
         </div>
 
-        <div className="overflow-x-auto">
+        {/* Mobile: Accordion View */}
+        {isMobile ? (
+          <CategoryAccordion
+            categories={categories}
+            budgets={budgets}
+            year={year}
+            onMonthClick={onMonthClick}
+          />
+        ) : (
+          /* Desktop: Table View */
+          <div className="overflow-x-auto">
           <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
             <thead className="bg-gray-50 dark:bg-gray-700">
               <tr>
@@ -276,6 +289,7 @@ export const YearlyBudgetOverview: React.FC<YearlyBudgetOverviewProps> = ({
             </tbody>
           </table>
         </div>
+        )}
       </div>
     </div>
   )

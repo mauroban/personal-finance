@@ -3,6 +3,9 @@ import react from '@vitejs/plugin-react'
 import path from 'path'
 
 export default defineConfig({
+  // Base path for GitHub Pages deployment
+  // Set to '/' for custom domain or local development
+  base: process.env.GITHUB_PAGES ? '/personal-finance/' : '/',
   plugins: [react()],
   resolve: {
     alias: {

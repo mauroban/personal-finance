@@ -2,6 +2,7 @@ import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
 import { lazy, Suspense } from 'react'
 import { AppProvider } from '@/context/AppContext'
 import { Navbar } from '@/components/layout/Navbar'
+import { BottomNav } from '@/components/layout/BottomNav'
 import { LoadingState } from '@/components/common/LoadingState'
 import { ErrorBoundary } from '@/components/common/ErrorBoundary'
 import { QuickStartGuide, useQuickStartGuide } from '@/components/common/QuickStartGuide'
@@ -17,7 +18,7 @@ function AppContent() {
 
   return (
     <>
-      <div className="min-h-screen bg-gray-50">
+      <div className="min-h-screen bg-gray-50 pb-20 md:pb-0">
         <Navbar />
         <Suspense fallback={<div className="p-8"><LoadingState /></div>}>
           <Routes>
@@ -27,6 +28,7 @@ function AppContent() {
             <Route path="/setup" element={<SetupPage />} />
           </Routes>
         </Suspense>
+        <BottomNav />
       </div>
       {shouldShow && <QuickStartGuide onClose={() => setShouldShow(false)} />}
     </>
