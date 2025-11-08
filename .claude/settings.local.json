@@ -1,0 +1,24 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm install)",
+      "Bash(npm test:*)",
+      "Bash(npm run build:*)",
+      "Bash(npm run dev:*)",
+      "Bash(npm install:*)",
+      "Bash(npx tsc:*)",
+      "Bash(\"C:\\Users\\mauro\\Desktop\\personal-finance\\src\\components\\dashboard\\PerformanceHeatmap.tsx\")",
+      "Bash(\"C:\\Users\\mauro\\Desktop\\personal-finance\\src\\components\\common\\LoadingState.tsx\")",
+      "Bash(\"C:\\Users\\mauro\\Desktop\\personal-finance\\src\\components\\common\\EmptyState.tsx\")",
+      "Bash(npm uninstall:*)",
+      "Bash(npm run typecheck:*)",
+      "Bash(if [ -f \"src/utils/sanitize.ts\" ])",
+      "Bash(then echo \"exists\")",
+      "Bash(else echo \"not found\")",
+      "Bash(fi)",
+      "Bash(dir \"C:\\Users\\mauro\\Desktop\\personal-finance\\src\" /b)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}

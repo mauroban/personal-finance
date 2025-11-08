@@ -1,0 +1,1 @@
+const o={locale:"pt-BR",currency:"BRL",minimumFractionDigits:2,maximumFractionDigits:2},s=100,a={significantChange:10},c={baseScore:50,maxScore:100,goodThreshold:70,poorThreshold:50};export{c as B,o as C,a as T,s as a};
