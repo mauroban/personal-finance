@@ -56,21 +56,47 @@ src/
 │   │   ├── SourceManager.tsx
 │   │   └── DatabaseReset.tsx         # Reset database tool
 │   ├── budget/
-│   │   ├── BudgetEditor.tsx        # Supports subcategories & recurrent budgets
-│   │   └── BudgetSummary.tsx
+│   │   ├── BudgetEditor.tsx          # Supports subcategories & recurrent budgets
+│   │   └── YearlyBudgetOverview.tsx  # Annual budget grid view
 │   ├── transactions/
 │   │   ├── TransactionForm.tsx
 │   │   ├── TransactionList.tsx
 │   │   └── InstallmentHandler.tsx
 │   ├── dashboard/
-│   │   ├── DashboardHeader.tsx
-│   │   ├── SummaryCard.tsx
-│   │   ├── GroupBreakdown.tsx
-│   │   └── IncomeExpenseChart.tsx
+│   │   ├── tabs/
+│   │   │   ├── OverviewTab.tsx       # Financial health overview
+│   │   │   ├── MonthTab.tsx          # Monthly detailed view
+│   │   │   ├── YearTab.tsx           # Annual analysis
+│   │   │   └── TrendsTab.tsx         # Trend analysis
+│   │   ├── TabNavigation.tsx         # 4-tab switcher
+│   │   ├── MonthlyHealthHero.tsx     # Status indicator
+│   │   ├── PerformanceHeatmap.tsx    # Calendar heatmap
+│   │   ├── AlertBanner.tsx           # Warnings/alerts
+│   │   ├── TopTransactions.tsx       # Recent activity
+│   │   ├── SpendingInsights.tsx      # Pattern analysis
+│   │   ├── YearlySummary.tsx         # Annual overview card
+│   │   ├── MonthlyBreakdownTable.tsx # 12-month table
+│   │   ├── YearlyCategoryTrends.tsx  # Category performance
+│   │   ├── CategoryTrendChart.tsx    # Trend visualization
+│   │   ├── CategoryImpactAnalysis.tsx# Variance analysis
+│   │   ├── MonthlyTrendChart.tsx     # Time series chart
+│   │   ├── VarianceAreaChart.tsx     # Budget variance
+│   │   ├── CategoryPieChart.tsx      # Distribution chart
+│   │   ├── SummaryCard.tsx           # Metric cards
+│   │   ├── GroupBreakdown.tsx        # Category breakdown
+│   │   ├── IncomeExpenseChart.tsx    # Income vs expense
+│   │   ├── MetricCard.tsx            # Reusable metric display
+│   │   ├── TrendSparkline.tsx        # Mini trend indicators
+│   │   ├── HeroCard.tsx              # Large status cards
+│   │   ├── CategoryProgressRow.tsx   # Category progress
+│   │   └── InsightsList.tsx          # Insights component
 │   ├── common/
 │   │   ├── Button.tsx
 │   │   ├── Modal.tsx
-│   │   └── Input.tsx
+│   │   ├── Input.tsx
+│   │   ├── PeriodSelector.tsx        # Year/month selector
+│   │   ├── LoadingState.tsx          # Loading indicator
+│   │   └── EmptyState.tsx            # Empty state display
 │   └── layout/
 │       ├── Navbar.tsx
 │       └── PageContainer.tsx
@@ -198,20 +224,78 @@ src/
 
 ### 📊 5.4 Dashboard Page (`DashboardPage.tsx`)
 
-**Goal:** Compare planned vs. actuals for a given month.
+**Goal:** Provide comprehensive financial insights through a multi-perspective dashboard.
 
-**Components:**
+**Architecture:** 4-tab navigation system with lazy loading
 
-* `DashboardHeader` → Month selector + summary.
-* `SummaryCard` → Compact indicators (Income, Expenses, Net).
-* `GroupBreakdown` → Visual bar comparison per category.
-* `IncomeExpenseChart` → Optional small visual (using Recharts).
+**Tab Structure:**
+
+1. **Overview Tab** (`OverviewTab.tsx`)
+   - Monthly Health Hero - Current financial status indicator
+   - Alert Banner - Budget warnings and notifications
+   - Performance Heatmap - Calendar-based spending visualization
+   - Top Transactions - Recent activity summary
+   - Spending Insights - Pattern analysis
+
+2. **Month Tab** (`MonthTab.tsx`)
+   - Detailed monthly analysis
+   - Income vs budget comparison
+   - Category breakdown with progress bars
+   - Income/Expense Chart
+
+3. **Year Tab** (`YearTab.tsx`)
+   - Annual summary with variance analysis
+   - Monthly breakdown table (all 12 months)
+   - Category trends over the year
+   - Drill-down to specific months
+
+4. **Trends Tab** (`TrendsTab.tsx`)
+   - Monthly trend charts
+   - Category trend analysis
+   - Variance area charts
+   - Category impact analysis
+   - Expense distribution (pie chart)
+
+**Key Components:**
+
+* `TabNavigation` → Switches between 4 views
+* `PeriodSelector` → Year/month selection (shown for Month and Year tabs)
+* `MonthlyHealthHero` → At-a-glance status indicator
+* `PerformanceHeatmap` → Calendar heatmap of spending
+* `YearlySummary` → Annual overview card
+* `MonthlyBreakdownTable` → 12-month comparison table
+* `CategoryTrendChart` → Spending trends by category
+* `CategoryImpactAnalysis` → Which categories drive variance
+* And 15+ specialized visualization components
+
+**Lazy Loading Pattern:**
+
+```tsx
+// Tabs are lazy loaded for performance
+const OverviewTab = lazy(() => import('@/components/dashboard/tabs/OverviewTab')...)
+const MonthTab = lazy(() => import('@/components/dashboard/tabs/MonthTab')...)
+const YearTab = lazy(() => import('@/components/dashboard/tabs/YearTab')...)
+const TrendsTab = lazy(() => import('@/components/dashboard/tabs/TrendsTab')...)
+
+// Rendered with Suspense boundary
+<Suspense fallback={<LoadingState />}>
+  {currentTab === VIEW_MODES.OVERVIEW && <OverviewTab {...props} />}
+  {/* ... other tabs */}
+</Suspense>
+```
+
+**Benefits:**
+- Faster initial page load (only loads active tab)
+- Reduced bundle size per route
+- Better code splitting
+- Improved performance on slower devices
 
 **UX Flow:**
 
-* Default to current month.
-* Displays totals + progress bars.
-* Option to toggle “Show subgroups”.
+* Default to Overview tab
+* Period selector shows only for Month and Year tabs
+* View preference persisted in localStorage
+* Drill-down: clicking month in Year tab switches to Month tab for that month
 
 ---
 
@@ -328,8 +412,37 @@ Holds:
   transactions: Transaction[];
   selectedMonth: number;
   selectedYear: number;
+  viewMode: string; // See VIEW_MODES below
 }
 ```
+
+### View Modes: `VIEW_MODES` Constants
+
+The app uses different view modes for different pages:
+
+```ts
+// constants/viewModes.ts
+export const VIEW_MODES = {
+  // Dashboard tabs (4 tabs)
+  OVERVIEW: 'overview',  // Financial health overview
+  MONTH: 'month',        // Monthly detailed analysis
+  YEAR: 'year',          // Annual overview
+  TRENDS: 'trends',      // Trend analysis
+
+  // Budget page views (2 views)
+  MONTHLY: 'monthly',    // Monthly budget editor
+  YEARLY: 'yearly',      // Yearly budget grid
+
+  // Legacy support (backward compatibility)
+  // Old versions used 'monthly'/'yearly' for dashboard
+  // New code maps these to MONTH/YEAR automatically
+}
+```
+
+**Usage:**
+- **Dashboard:** Uses OVERVIEW, MONTH, YEAR, TRENDS (4-tab system)
+- **Budget:** Uses MONTHLY, YEARLY (2-view toggle)
+- View preference persisted in localStorage per page
 
 ### Hooks
 
@@ -346,11 +459,13 @@ All hooks interact with Dexie and dispatch updates to `AppContext`.
 
 ## 💾 7. Data Model Reference
 
+**Database Version:** 2 (with optimized indexes)
+
 ```ts
 type Category = {
   id?: number;
   name: string;
-  parentId?: number;
+  parentId?: number; // null for main categories, ID for subcategories
 };
 
 type Source = {
@@ -362,29 +477,47 @@ type Transaction = {
   id?: number;
   type: 'earning' | 'expense';
   value: number;
-  date: string;
+  date: string; // ISO format
   groupId: number;
   subgroupId?: number;
-  method?: string;
-  installments?: number;
+  method?: string; // Payment method for expenses
+  installments?: number; // Number of installments (for display)
+  note?: string; // Optional description
 };
 
 type Budget = {
   id?: number;
   year: number;
-  month: number;
+  month: number; // 1-12
   type: 'income' | 'expense';
-  sourceId?: number;
-  groupId?: number;
-  subgroupId?: number;
+  sourceId?: number; // For income budgets
+  groupId?: number; // For expense budgets (main category)
+  subgroupId?: number; // For expense budgets (subcategory)
   amount: number;
-  mode?: 'unique' | 'recurring' | 'installment';
-  installments?: number;
-  installmentNumber?: number;
-  // Legacy support
-  isRecurrent?: boolean;
+  mode?: 'unique' | 'recurring' | 'installment'; // Budget mode
+  installments?: number; // Total installments (for installment mode)
+  installmentNumber?: number; // Current installment number
+  // Legacy support (auto-migrated)
+  isRecurrent?: boolean; // Deprecated, replaced by mode: 'recurring'
 };
 ```
+
+**Database Schema (Dexie):**
+
+```ts
+// Schema version 2
+db.version(2).stores({
+  categories: '++id, name, parentId',
+  sources: '++id, name',
+  transactions: '++id, type, date, groupId, subgroupId',
+  budgets: '++id, year, month, type, mode, sourceId, groupId, subgroupId, [year+month]'
+});
+```
+
+**Key Indexes:**
+- `[year+month]` compound index for efficient budget queries
+- `mode` index for filtering recurring/installment budgets
+- Optimized for common queries (get budgets for specific month, find recurring budgets)
 
 ---
 
@@ -448,18 +581,51 @@ Handle missing budgets gracefully (avoid dividing by zero).
 * Use **TypeScript interfaces** for all props.
 * Keep components **pure and focused**.
 * Avoid direct Dexie access inside components — use hooks.
+* Use **lazy loading** for large components or tabs (see Dashboard pattern).
+* Memoize expensive calculations with `useMemo`.
+* Memoize callbacks passed to child components with `useCallback`.
+
+### Performance Optimization
+
+* **Code Splitting:**
+  ```tsx
+  // Lazy load large components
+  const HeavyComponent = lazy(() => import('./HeavyComponent'))
+
+  // Always wrap with Suspense
+  <Suspense fallback={<LoadingState />}>
+    <HeavyComponent />
+  </Suspense>
+  ```
+
+* **Component Memoization:**
+  ```tsx
+  // Prevent unnecessary re-renders
+  export const ExpensiveComponent = React.memo(({ data }) => {
+    // Component logic
+  })
+  ```
+
+* **Database Optimization:**
+  - Use compound indexes for common queries: `[year+month]`
+  - Use `bulkDelete` for multiple deletions
+  - Query only needed fields when possible
 
 ### UI
 
 * Use consistent Tailwind spacing (e.g., `p-4`, `m-4`, `rounded-xl`).
 * Prefer **modals** for editing, **inline forms** for adding.
 * Use color for **context only** (green = income, red = expense).
+* Always provide **loading states** for async operations.
+* Include **empty states** for lists/tables with no data.
 
 ### Storage
 
 * Always handle `await` on Dexie operations.
 * Validate user input before saving.
 * Version IndexedDB schema when extending data models.
+* Use transactions for multiple related operations.
+* Handle migration logic in version upgrade callbacks.
 
 ---
 

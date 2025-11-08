@@ -33,7 +33,27 @@ npm run preview
 ```bash
 # Run all tests
 npm test
+
+# Run tests in watch mode (during development)
+npm test -- --watch
+
+# Run type checking
+npm run typecheck
+
+# Run linting
+npm run lint
+
+# Run all quality checks
+npm run typecheck && npm run lint && npm test
 ```
+
+**Test Coverage:**
+- Utility functions (date formatting, calculations, data transformations)
+- React hooks (budget calculations, data fetching)
+- Component behavior (forms, modals, user interactions)
+- Database operations (IndexedDB via Dexie.js)
+
+See `docs/technical-context.md` for detailed testing philosophy and guidelines.
 
 ## 🖥️ Desktop Application
 
@@ -52,8 +72,8 @@ This app can be built as a **native desktop application** for Windows and macOS 
 ### Ready-to-Install Desktop Builds
 
 **Windows Installers (Built & Ready):**
-- **MSI:** `src-tauri/target/release/bundle/msi/Simple Budget Tracker_1.0.1_x64_en-US.msi`
-- **NSIS:** `src-tauri/target/release/bundle/nsis/Simple Budget Tracker_1.0.1_x64-setup.exe`
+- **MSI:** `src-tauri/target/release/bundle/msi/Simple Budget Tracker_1.0.3_x64_en-US.msi`
+- **NSIS:** `src-tauri/target/release/bundle/nsis/Simple Budget Tracker_1.0.3_x64-setup.exe`
 
 **App Icon:** A placeholder icon (blue with "$" symbol) is included. See [ICONS.md](./ICONS.md) for customization instructions.
 
@@ -78,8 +98,8 @@ npm run tauri icon app-icon.svg
 ```
 
 **Output:**
-- **Windows:** `src-tauri/target/release/bundle/msi/Simple Budget Tracker_1.0.1_x64_en-US.msi`
-- **macOS:** `src-tauri/target/release/bundle/dmg/Simple Budget Tracker_1.0.1_x64.dmg`
+- **Windows:** `src-tauri/target/release/bundle/msi/Simple Budget Tracker_1.0.3_x64_en-US.msi`
+- **macOS:** `src-tauri/target/release/bundle/dmg/Simple Budget Tracker_1.0.3_x64.dmg`
 
 📖 **Full desktop build guide:** See [DESKTOP-BUILD.md](./DESKTOP-BUILD.md) for complete instructions, troubleshooting, and distribution tips.
 
@@ -99,12 +119,14 @@ This makes annual financial planning intuitive and gives you the big picture whi
 
 ### 1. First-Time Setup
 
-When you first open the app, go to **Configuração** (Setup) to:
+**Good news:** The app comes **pre-loaded with 9 Brazilian expense categories and 40+ subcategories**!
 
-1. **Add Expense Categories**: Create main categories (e.g., "Alimentação", "Transporte") and optional subcategories
-2. **Add Income Sources**: Define your income sources (e.g., "Salário", "Freelance")
+When you first open the app, you can:
+- Start budgeting immediately with default categories (Moradia, Transporte, Alimentação, etc.)
+- Customize categories in **Configuração** (Setup) - add, edit, or delete as needed
+- Add your own income sources or use the defaults (Salário, Freelance, Investimentos, Outros)
 
-**Tip**: Use the Brazilian default categories listed in `docs/product-context.md` for guidance.
+**See `docs/product-context.md` section 8 for the complete list of pre-loaded categories.**
 
 ### 2. Set Your Budget
 
@@ -153,20 +175,27 @@ Go to **Transações** (Transactions):
 
 ### 4. Review Your Dashboard
 
-The **Dashboard** provides comprehensive financial insights:
+The **Dashboard** provides comprehensive financial insights through a **4-tab navigation system**:
 
-#### Monthly View
+#### 📊 Overview Tab
+Your financial health at a glance:
+- **Monthly Health Hero** - Current month status with visual indicators
+- **Alert Banner** - Important warnings about budget overruns or low balances
+- **Performance Heatmap** - Visual calendar showing spending patterns
+- **Top Transactions** - Recent activity summary
+- **Spending Insights** - AI-like analysis of your habits
 
-- See your actual income vs. forecasted income
-- Track expenses against your budget
-- View your net balance (savings or deficit)
-- See category-by-category breakdowns with progress bars
-- Green indicators mean you're within budget, red means over budget
+#### 📅 Month Tab
+Detailed analysis of a specific month:
+- Income vs forecasted income with progress indicators
+- Expenses vs budget by category with progress bars
+- Net balance (savings or deficit)
+- Category breakdown with subcategory details
+- Green indicators = within budget, red = over budget
+- **Income/Expense Chart** - Visual comparison
 
-#### Yearly View
-
-Click **Anual** to access yearly analytics:
-
+#### 📈 Year Tab
+Annual overview and planning:
 1. **Annual Summary Card**:
    - Total income, expenses, and balance for the year
    - Planned vs actual comparison with variance analysis
@@ -174,21 +203,24 @@ Click **Anual** to access yearly analytics:
    - Key insights (best/worst months, monthly averages)
 
 2. **Monthly Breakdown Table**:
-   - All 12 months with planned vs actual for income and expenses
+   - All 12 months with planned vs actual
    - Variance calculations showing over/under performance
-   - Click any month to drill down to monthly detail view
+   - Click any month to drill down to Month tab
 
 3. **Category Trends Analysis**:
    - Yearly performance for each expense category
    - Expandable sections showing month-by-month details
    - Visual progress bars and budget execution percentages
-   - Identify categories that are over or under budget
 
-This yearly view is essential for:
-- Annual financial planning and goal setting
-- Identifying spending patterns and trends
-- Comparing performance across months
-- Understanding seasonal variations in income/expenses
+#### 📉 Trends Tab
+Long-term pattern analysis:
+- **Monthly Trend Chart** - Income/expense trends over time
+- **Category Trend Chart** - Spending patterns by category
+- **Variance Area Chart** - Budget vs actual visualization
+- **Category Impact Analysis** - Which categories affect your budget most
+- **Category Pie Chart** - Expense distribution
+
+The dashboard uses **lazy loading** for optimal performance, loading each tab only when you need it.
 
 ### 5. Backup & Restore
 
@@ -248,25 +280,37 @@ See `docs/technical-context.md` for detailed testing guidelines.
 ## 🌟 Features
 
 ### Core Functionality
-✅ **Local-first data storage** - All data stays on your device
+✅ **Local-first data storage** - All data stays on your device (IndexedDB)
 ✅ **Pre-loaded Brazilian categories** - 9 main categories with 40+ subcategories
 ✅ **Custom expense categories** with unlimited subcategories
 ✅ **Multiple income sources** tracking
 ✅ **Monthly budget planning** with subcategory support
 ✅ **Yearly budget overview** - 12-month grid with drill-down capability
-✅ **Annual analytics** - Comprehensive yearly financial insights
-✅ **Variance analysis** - Track planned vs actual for income and expenses
-✅ **Category trends** - Yearly performance analysis by expense category
-✅ **Recurrent budgets** - Mark monthly expenses to auto-copy
+✅ **Recurrent budgets** - Mark monthly expenses to auto-copy to future months
+✅ **Installment budgets** - Specify N-month duration for planned expenses
+✅ **Cash register input** - Type digits like a calculator (1234 → R$ 12,34)
 ✅ **Transaction logging** with installment support
+✅ **Smart delete** - Preserves historical data when deleting recurring budgets
 ✅ **Collapsible category view** - Organize budgets by category and subcategory
-✅ **Real-time budget vs. actual comparison**
-✅ **Visual progress indicators** with color coding
-✅ **Drill-down navigation** - Click months in yearly view to edit details
-✅ **View mode persistence** - Your monthly/yearly preference is remembered
 ✅ **Export/Import backup system** (.json format with XSS protection)
-✅ **Brazilian Real (BRL)** currency format
-✅ **Portuguese UI** throughout
+✅ **Brazilian Real (BRL)** currency format throughout
+✅ **Portuguese UI** - Complete localization
+
+### Advanced Dashboard Analytics
+✅ **4-tab navigation** - Overview, Month, Year, Trends for different perspectives
+✅ **Monthly Health Hero** - At-a-glance financial status with visual indicators
+✅ **Performance Heatmap** - Calendar view showing spending patterns
+✅ **Alert Banner** - Proactive warnings about budget overruns
+✅ **Top Transactions** - Quick view of recent activity
+✅ **Spending Insights** - Intelligent analysis of spending habits
+✅ **Annual analytics** - Comprehensive yearly financial insights
+✅ **Variance analysis** - Track planned vs actual with detailed breakdowns
+✅ **Category trends** - Yearly performance analysis by expense category
+✅ **Monthly Trend Charts** - Income/expense trends over time
+✅ **Category Impact Analysis** - Identify which categories affect budget most
+✅ **Visual progress indicators** - Color-coded bars and charts
+✅ **Drill-down navigation** - Click months in yearly view to see details
+✅ **Real-time calculations** - Instant budget vs. actual comparisons
 
 ### UX & Accessibility
 ✅ **Mobile responsive design** - Optimized layouts for all screen sizes
@@ -275,13 +319,16 @@ See `docs/technical-context.md` for detailed testing guidelines.
 ✅ **Screen reader support** - Descriptive labels for all interactive elements
 ✅ **Keyboard navigation** - Arrow keys, Tab, Escape support throughout
 ✅ **Loading states** - Visual feedback during async operations
-✅ **Error handling** - User-friendly error messages in modals
+✅ **Error handling** - User-friendly error messages with proper validation
+✅ **View mode persistence** - Your tab/view preferences are remembered
 
-### Performance
-✅ **Code splitting** - Lazy-loaded pages and components
+### Performance & Architecture
+✅ **Code splitting** - Lazy-loaded dashboard tabs for faster initial load
 ✅ **Optimized bundle** - 61% smaller initial load (308KB vs 794KB)
 ✅ **Memoized callbacks** - Prevents unnecessary re-renders
 ✅ **Fast startup** - Only loads what you need, when you need it
+✅ **Bulk operations** - Efficient database operations with proper indexes
+✅ **Schema versioning** - Database migration support (currently v2)
 
 ## 🔒 Privacy
 
