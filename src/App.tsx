@@ -1,11 +1,12 @@
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
-import { lazy, Suspense } from 'react'
+import { lazy, Suspense, useEffect } from 'react'
 import { AppProvider } from '@/context/AppContext'
 import { Navbar } from '@/components/layout/Navbar'
 import { BottomNav } from '@/components/layout/BottomNav'
 import { LoadingState } from '@/components/common/LoadingState'
 import { ErrorBoundary } from '@/components/common/ErrorBoundary'
 import { QuickStartGuide, useQuickStartGuide } from '@/components/common/QuickStartGuide'
+import { fileSyncService } from '@/services/fileSync'
 
 // Lazy load all page components for code splitting
 const DashboardPage = lazy(() => import('@/pages/DashboardPage').then(module => ({ default: module.DashboardPage })))
@@ -15,6 +16,13 @@ const SetupPage = lazy(() => import('@/pages/SetupPage').then(module => ({ defau
 
 function AppContent() {
   const { shouldShow, setShouldShow } = useQuickStartGuide()
+
+  // Initialize file sync service on app load
+  useEffect(() => {
+    fileSyncService.initialize().catch(error => {
+      console.error('Failed to initialize file sync service:', error)
+    })
+  }, [])
 
   return (
     <>

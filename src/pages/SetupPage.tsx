@@ -4,6 +4,7 @@ import { CategoryManager } from '@/components/setup/CategoryManager'
 import { SourceManager } from '@/components/setup/SourceManager'
 import { DatabaseReset } from '@/components/setup/DatabaseReset'
 import { DataPrivacyWarning } from '@/components/common/DataPrivacyWarning'
+import { FileSyncSettings } from '@/components/setup/FileSyncSettings'
 
 export const SetupPage: React.FC = () => {
   return (
@@ -13,6 +14,7 @@ export const SetupPage: React.FC = () => {
     >
       <div className="space-y-6">
         <DataPrivacyWarning />
+        <FileSyncSettings />
         <CategoryManager />
         <SourceManager />
         <DatabaseReset />
