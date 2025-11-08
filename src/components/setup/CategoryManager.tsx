@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useCallback } from 'react'
 import { useApp } from '@/context/AppContext'
 import { Button } from '@/components/common/Button'
 import { Input } from '@/components/common/Input'
@@ -21,7 +21,7 @@ export const CategoryManager: React.FC = () => {
     return categories.filter(c => c.parentId === parentId)
   }
 
-  const handleAddCategory = async () => {
+  const handleAddCategory = useCallback(async () => {
     if (!newCategoryName.trim()) {
       return
     }
@@ -34,18 +34,26 @@ export const CategoryManager: React.FC = () => {
     setNewCategoryName('')
     setSelectedParentId(undefined)
     setIsModalOpen(false)
-  }
+  }, [newCategoryName, selectedParentId, addCategory])
 
-  const handleDelete = (id: number) => {
+  const handleDelete = useCallback((id: number) => {
     setDeleteConfirm({ isOpen: true, id })
-  }
+  }, [])
 
-  const confirmDelete = async () => {
+  const confirmDelete = useCallback(async () => {
     if (deleteConfirm.id) {
       await deleteCategory(deleteConfirm.id)
       setDeleteConfirm({ isOpen: false, id: null })
     }
-  }
+  }, [deleteConfirm.id, deleteCategory])
+
+  const handleCloseModal = useCallback(() => {
+    setIsModalOpen(false)
+  }, [])
+
+  const handleCloseDeleteConfirm = useCallback(() => {
+    setDeleteConfirm({ isOpen: false, id: null })
+  }, [])
 
   return (
     <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-4 sm:p-6">
@@ -118,7 +126,7 @@ export const CategoryManager: React.FC = () => {
 
       <Modal
         isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
+        onClose={handleCloseModal}
         title="Adicionar Categoria"
       >
         <div className="space-y-4">
@@ -160,7 +168,7 @@ export const CategoryManager: React.FC = () => {
           </div>
 
           <div className="flex justify-end space-x-2 pt-4">
-            <Button variant="secondary" onClick={() => setIsModalOpen(false)}>
+            <Button variant="secondary" onClick={handleCloseModal}>
               Cancelar
             </Button>
             <Button onClick={handleAddCategory} disabled={!newCategoryName.trim()}>
@@ -172,7 +180,7 @@ export const CategoryManager: React.FC = () => {
 
       <ConfirmModal
         isOpen={deleteConfirm.isOpen}
-        onClose={() => setDeleteConfirm({ isOpen: false, id: null })}
+        onClose={handleCloseDeleteConfirm}
         onConfirm={confirmDelete}
         title="Excluir Categoria"
         message="Tem certeza que deseja excluir esta categoria? Esta ação não pode ser desfeita."

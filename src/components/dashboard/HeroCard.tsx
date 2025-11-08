@@ -34,9 +34,9 @@ export const HeroCard: React.FC<HeroCardProps> = ({
   }
 
   const getStatusText = () => {
-    if (isExceeding) return 'Parabéns! Meta superada!'
+    if (isExceeding) return 'Parabéns! Planejamento superado!'
     if (isOnTrack) return 'Você está no caminho certo!'
-    return 'Continue se esforçando!'
+    return 'Abaixo do planejado'
   }
 
   return (
@@ -47,9 +47,11 @@ export const HeroCard: React.FC<HeroCardProps> = ({
           <h3 className="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1">
             {title}
           </h3>
-          <p className="text-xs text-gray-600 dark:text-gray-400">
-            {subtitle || 'Progresso no ano'}
-          </p>
+          {subtitle && (
+            <p className="text-xs text-gray-600 dark:text-gray-400">
+              {subtitle}
+            </p>
+          )}
         </div>
         <span className="text-4xl">{getTrendEmoji()}</span>
       </div>
@@ -59,17 +61,16 @@ export const HeroCard: React.FC<HeroCardProps> = ({
         <div className="text-5xl font-bold text-gray-900 dark:text-white mb-2">
           {formatCurrency(value)}
         </div>
-        <div className="text-lg text-gray-600 dark:text-gray-400">
-          de {formatCurrency(target)} meta anual
-        </div>
+        {target > 0 && (
+          <div className="text-lg text-gray-600 dark:text-gray-400">
+            de {formatCurrency(target)} planejado
+          </div>
+        )}
       </div>
 
       {/* Progress Bar */}
       <div className="space-y-3">
-        <div className="flex justify-between items-center">
-          <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
-            Progresso
-          </span>
+        <div className="flex justify-end items-center">
           <span className={`text-sm font-bold ${
             isExceeding
               ? 'text-green-600 dark:text-green-400'
@@ -77,7 +78,7 @@ export const HeroCard: React.FC<HeroCardProps> = ({
               ? 'text-blue-600 dark:text-blue-400'
               : 'text-amber-600 dark:text-amber-400'
           }`}>
-            {percentage.toFixed(1)}%
+            {percentage.toFixed(1)}% do planejado
           </span>
         </div>
 
@@ -113,20 +114,22 @@ export const HeroCard: React.FC<HeroCardProps> = ({
       </div>
 
       {/* Additional Stats */}
-      <div className="mt-6 pt-6 border-t border-gray-200 dark:border-gray-700 grid grid-cols-2 gap-4">
-        <div>
-          <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">Falta atingir</p>
-          <p className="text-lg font-semibold text-gray-900 dark:text-white">
-            {target > value ? formatCurrency(target - value) : 'Meta atingida! 🎉'}
-          </p>
+      {target > 0 && (
+        <div className="mt-6 pt-6 border-t border-gray-200 dark:border-gray-700 grid grid-cols-2 gap-4">
+          <div>
+            <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">Diferença do planejado</p>
+            <p className="text-lg font-semibold text-gray-900 dark:text-white">
+              {target > value ? formatCurrency(target - value) : `+${formatCurrency(value - target)}`}
+            </p>
+          </div>
+          <div>
+            <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">Média mensal</p>
+            <p className="text-lg font-semibold text-gray-900 dark:text-white">
+              {formatCurrency(value / (new Date().getMonth() + 1))}
+            </p>
+          </div>
         </div>
-        <div>
-          <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">Média mensal</p>
-          <p className="text-lg font-semibold text-gray-900 dark:text-white">
-            {formatCurrency(value / new Date().getMonth() || 1)}
-          </p>
-        </div>
-      </div>
+      )}
     </div>
   )
 }

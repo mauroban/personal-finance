@@ -52,7 +52,22 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   const [selectedMonth, setSelectedMonth] = useState(getCurrentMonth())
   const [viewMode, setViewModeState] = useState<ViewMode>(() => {
     const stored = localStorage.getItem('viewMode')
-    return (stored as ViewMode) || VIEW_MODES.OVERVIEW
+    // Map legacy values to new ones
+    if (stored === 'monthly') {
+      localStorage.setItem('viewMode', VIEW_MODES.MONTH)
+      return VIEW_MODES.MONTH
+    }
+    if (stored === 'yearly') {
+      localStorage.setItem('viewMode', VIEW_MODES.YEAR)
+      return VIEW_MODES.YEAR
+    }
+    // If stored value is not valid, default to OVERVIEW
+    const validModes = [VIEW_MODES.OVERVIEW, VIEW_MODES.MONTH, VIEW_MODES.YEAR, VIEW_MODES.TRENDS]
+    if (stored && validModes.includes(stored as ViewMode)) {
+      return stored as ViewMode
+    }
+    // Default to OVERVIEW
+    return VIEW_MODES.OVERVIEW
   })
 
   const setViewMode = (mode: ViewMode) => {

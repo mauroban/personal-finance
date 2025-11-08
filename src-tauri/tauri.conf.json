@@ -1,6 +1,6 @@
 {
   "productName": "Simple Budget Tracker",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "identifier": "com.simple-budget-tracker.app",
   "build": {
     "beforeDevCommand": "npm run dev",

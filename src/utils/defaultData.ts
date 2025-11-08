@@ -16,7 +16,7 @@ export const DEFAULT_CATEGORY_STRUCTURE = [
   },
   {
     name: 'Saúde',
-    subcategories: ['Plano de saúde', 'Medicamentos', 'Consultas médicas', 'Exames laboratoriais', 'Academia', 'Equipamentos', 'Farmácia']
+    subcategories: ['Plano de saúde', 'Medicamentos', 'Consultas médicas', 'Dentista', 'Exames laboratoriais', 'Academia', 'Equipamentos', 'Farmácia']
   },
   {
     name: 'Educação',

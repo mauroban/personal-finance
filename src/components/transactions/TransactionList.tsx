@@ -352,17 +352,11 @@ export const TransactionList: React.FC = () => {
         <div className="mt-5 pt-5 border-t border-blue-200 dark:border-blue-800/50">
           <div className="flex items-center justify-between flex-wrap gap-2">
             <div className="flex items-center gap-2">
-              <div className="px-3 py-1.5 bg-white dark:bg-gray-800 rounded-lg border border-blue-200 dark:border-blue-700">
-                <span className="text-sm font-semibold text-gray-900 dark:text-white">
-                  {paginatedTransactions.length}
-                </span>
-                <span className="text-xs text-gray-500 dark:text-gray-400 ml-1">visíveis</span>
-              </div>
               <div className="px-3 py-1.5 bg-blue-100 dark:bg-blue-900/30 rounded-lg">
                 <span className="text-sm font-semibold text-blue-700 dark:text-blue-300">
                   {filteredAndSortedTransactions.length}
                 </span>
-                <span className="text-xs text-blue-600 dark:text-blue-400 ml-1">filtradas</span>
+                <span className="text-xs text-blue-600 dark:text-blue-400 ml-1">visíveis</span>
               </div>
               {filteredAndSortedTransactions.length !== transactions.length && (
                 <div className="px-3 py-1.5 bg-gray-100 dark:bg-gray-700/50 rounded-lg">

@@ -248,10 +248,9 @@ export const OverviewTab: React.FC<OverviewTabProps> = ({
     const projectedVariableSpending = isCurrentMonth
       ? (dailyAverage * daysInMonth)
       : variableExpenses
-    const projectedTotalSpending = projectedVariableSpending + fixedExpenses
 
-    const isOnTrack = monthSummary.budgetedExpense > 0
-      ? projectedTotalSpending <= monthSummary.budgetedExpense
+    const isOnTrack = variableBudgeted > 0
+      ? projectedVariableSpending <= variableBudgeted
       : true
 
     return {
@@ -273,7 +272,7 @@ export const OverviewTab: React.FC<OverviewTabProps> = ({
     <div className="space-y-6">
       {/* YTD Hero Card */}
       <HeroCard
-        title="Economia Acumulada no Ano"
+        title="Economia Acumulada"
         value={ytdSummary.totalSavings}
         target={ytdSummary.budgetedSavings}
         percentage={ytdSummary.savingsPercentage}
@@ -360,7 +359,7 @@ export const OverviewTab: React.FC<OverviewTabProps> = ({
         {/* Spending Insights */}
         <SpendingInsights
           totalSpent={spendingInsights.totalSpent}
-          totalBudgeted={spendingInsights.totalBudgeted}
+          totalBudgeted={spendingInsights.variableBudgeted}
           avgMonthlySpending={spendingInsights.avgMonthlySpending}
           daysInMonth={spendingInsights.daysInMonth}
           daysElapsed={spendingInsights.daysElapsed}
@@ -411,25 +410,6 @@ export const OverviewTab: React.FC<OverviewTabProps> = ({
         currentMonth={month}
       />
 
-      {/* Quick Action */}
-      <div className="card p-6 bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 border-blue-200 dark:border-blue-800">
-        <div className="flex items-center justify-between">
-          <div>
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-1">
-              Ver Análise Detalhada
-            </h3>
-            <p className="text-sm text-gray-600 dark:text-gray-400">
-              Explore gráficos e relatórios completos do mês atual
-            </p>
-          </div>
-          <button
-            onClick={() => setViewMode(VIEW_MODES.MONTH)}
-            className="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors"
-          >
-            Ver Detalhes →
-          </button>
-        </div>
-      </div>
     </div>
   )
 }
