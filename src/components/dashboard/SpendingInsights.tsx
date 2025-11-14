@@ -137,7 +137,7 @@ export const SpendingInsights: React.FC<SpendingInsightsProps> = ({
   return (
     <div className="card p-6">
       <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
-        Insights de Gastos Variáveis
+        Insights de Custos Variáveis
       </h3>
       <div className="space-y-4">
         {insights.map((insight, index) => (

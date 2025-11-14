@@ -247,18 +247,40 @@ Long-term pattern analysis:
 
 The dashboard uses **lazy loading** for optimal performance, loading each tab only when you need it.
 
-### 5. Backup & Restore
+### 5. Backup, Restore & Sync
+
+**Option 1: File-Based Auto-Sync** (Recommended)
+
+Navigate to **Configuração** (Setup) → **Sincronização de Arquivo**:
+
+1. Click **Escolher Arquivo de Sync** and select a location (works great with Google Drive, Dropbox, OneDrive folders)
+2. Your data will automatically sync to this file every 5 seconds after any change
+3. Versioned backups are created automatically (e.g., `budget-data-0001.json`, `budget-data-0002.json`)
+4. Protected from accidental data loss - warning shown if you try to load data when you already have existing data
+
+**Features:**
+- ✅ Auto-sync every 5 seconds after changes
+- ✅ 5 versioned backup files kept automatically
+- ✅ 100% local - no servers, no cloud uploads
+- ✅ Works with any folder (including cloud drive sync folders)
+- ✅ Data overwrite protection with safety warnings
+
+**Option 2: Manual Export/Import**
 
 Use the **Exportar** button in the navbar to download a `.json` backup of all your data.
 
-Use **Importar** to restore from a backup file. This will replace all current data.
+Use **Importar** to restore from a backup file. This will replace all current data (with a safety warning if you have existing data).
+
+📖 **Full sync guide:** See [docs/SYNC-USER-GUIDE.md](./docs/SYNC-USER-GUIDE.md) and [docs/SYNC-FIXES.md](./docs/SYNC-FIXES.md)
 
 ## 🗂️ Data Storage
 
 - All data is stored **locally** in your browser using IndexedDB
-- No cloud sync, no accounts, no servers
-- Your data never leaves your device
-- Regular backups are recommended (use Export feature)
+- **Optional file sync** - Choose a local file for automatic sync (works with cloud drive folders like Google Drive, Dropbox, OneDrive)
+- **100% local** - No servers, no accounts, no cloud uploads
+- Your data never leaves your device (file sync writes to your local file system only)
+- **Automatic backups** - File sync creates 5 versioned backup files automatically
+- **Manual backups** - Use Export feature to download `.json` backups anytime
 
 ## 🛠️ Tech Stack
 
@@ -299,13 +321,19 @@ See `docs/technical-context.md` for detailed testing guidelines.
 
 - **Product Context**: See `docs/product-context.md` for product vision and user flows
 - **Technical Context**: See `docs/technical-context.md` for architecture and development guidelines
-- **Desktop Build Guide**: See `DESKTOP-BUILD.md` for complete Tauri build instructions
-- **Icon Customization**: See `ICONS.md` for app icon generation and customization
+- **Desktop Build Guide**: See `docs/DESKTOP-BUILD.md` for complete Tauri build instructions
+- **Icon Customization**: See `docs/ICONS.md` for app icon generation and customization
+- **Mobile Optimization**: See `docs/MOBILE-OPTIMIZATION.md` for responsive design details
+- **Deployment Guide**: See `docs/DEPLOYMENT.md` for web deployment options
+- **File Sync Guide**: See `docs/SYNC-USER-GUIDE.md` for automatic file synchronization
 
 ## 🌟 Features
 
 ### Core Functionality
 ✅ **Local-first data storage** - All data stays on your device (IndexedDB)
+✅ **File-based auto-sync** - Automatic sync every 5 seconds to local file (works with cloud drive folders)
+✅ **Versioned backups** - Automatically keeps 5 backup versions (e.g., `budget-data-0001.json`)
+✅ **Data overwrite protection** - Safety warnings prevent accidental data loss
 ✅ **Pre-loaded Brazilian categories** - 9 main categories with 40+ subcategories
 ✅ **Custom expense categories** with unlimited subcategories
 ✅ **Multiple income sources** tracking
@@ -358,10 +386,18 @@ See `docs/technical-context.md` for detailed testing guidelines.
 ## 🔒 Privacy
 
 This app is designed with privacy in mind:
-- No analytics or tracking
-- No external API calls
-- All data stays on your device
-- No user accounts required
+- **100% local** - No servers, no cloud uploads, no external APIs
+- **File sync is local-only** - Uses browser File System Access API (writes to your local file system only)
+- **No analytics or tracking** - Zero telemetry or data collection
+- **No network requests** - All data stays on your device
+- **No user accounts required** - Completely anonymous usage
+
+**Security Verified:** All data storage uses only:
+- IndexedDB (local browser storage)
+- File System Access API (local file writes)
+- localStorage (local browser storage for settings)
+
+See [docs/SYNC-FIXES.md](./docs/SYNC-FIXES.md) for complete security verification details.
 
 ## 📄 License
 

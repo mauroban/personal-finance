@@ -11,6 +11,7 @@ import { useBudgetCalculations } from '@/hooks/useBudgetCalculations'
 import { formatCurrency } from '@/utils/format'
 import { VIEW_MODES } from '@/constants/viewModes'
 import { useApp } from '@/context/AppContext'
+import { isDateInMonth } from '@/utils/date'
 
 interface OverviewTabProps {
   transactions: Transaction[]
@@ -103,10 +104,7 @@ export const OverviewTab: React.FC<OverviewTabProps> = ({
         continue
       }
 
-      const monthTrans = transactions.filter(t => {
-        const date = new Date(t.date)
-        return date.getFullYear() === targetYear && date.getMonth() + 1 === targetMonth
-      })
+      const monthTrans = transactions.filter(t => isDateInMonth(t.date, targetYear, targetMonth))
 
       const monthBuds = budgets.filter(b => b.year === targetYear && b.month === targetMonth)
 
@@ -139,11 +137,8 @@ export const OverviewTab: React.FC<OverviewTabProps> = ({
     const daysInMonth = new Date(year, month, 0).getDate()
     const daysElapsed = isCurrentMonth ? today.getDate() : daysInMonth
 
-    // Get current month transactions
-    const currentMonthTransactions = transactions.filter(t => {
-      const date = new Date(t.date)
-      return date.getFullYear() === year && date.getMonth() + 1 === month
-    })
+    // Get current month transactions (using isDateInMonth to avoid timezone issues)
+    const currentMonthTransactions = transactions.filter(t => isDateInMonth(t.date, year, month))
 
     // Get current month budgets
     const currentMonthBudgets = budgets.filter(b => b.year === year && b.month === month && b.type === 'expense')
@@ -202,10 +197,7 @@ export const OverviewTab: React.FC<OverviewTabProps> = ({
         continue
       }
 
-      const monthTransactions = transactions.filter(t => {
-        const date = new Date(t.date)
-        return date.getFullYear() === targetYear && date.getMonth() + 1 === targetMonth
-      })
+      const monthTransactions = transactions.filter(t => isDateInMonth(t.date, targetYear, targetMonth))
 
       const monthBudgets = budgets.filter(b => b.year === targetYear && b.month === targetMonth)
 
@@ -338,7 +330,7 @@ export const OverviewTab: React.FC<OverviewTabProps> = ({
             <div className="bg-purple-50 dark:bg-purple-900/20 rounded-lg p-4">
               <div className="flex items-center gap-2 mb-2">
                 <span className="text-2xl">💸</span>
-                <span className="text-sm text-gray-600 dark:text-gray-400">Gastos Variáveis</span>
+                <span className="text-sm text-gray-600 dark:text-gray-400">Custos Variáveis</span>
               </div>
               <div className="text-2xl font-bold text-purple-600 dark:text-purple-400">
                 {formatCurrency(spendingInsights.totalSpent)}

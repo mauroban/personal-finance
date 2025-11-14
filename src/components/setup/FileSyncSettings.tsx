@@ -5,15 +5,31 @@ export const FileSyncSettings: React.FC = () => {
   const [config, setConfig] = useState<any>(null)
   const [isSettingUp, setIsSettingUp] = useState(false)
   const [isSyncing, setIsSyncing] = useState(false)
+  const [isLoading, setIsLoading] = useState(false)
   const [backups, setBackups] = useState<any[]>([])
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState<string | null>(null)
   const [isSupported, setIsSupported] = useState(true)
+  const [showDataWarning, setShowDataWarning] = useState(false)
+  const [showFileOverwriteWarning, setShowFileOverwriteWarning] = useState(false)
+  const [pendingImport, setPendingImport] = useState<{ content?: string; backupKey?: string } | null>(null)
+  const [pendingSetup, setPendingSetup] = useState<{ needsInitialSave: boolean; fileContent?: string } | null>(null)
+  const [syncStatus, setSyncStatus] = useState<any>(null)
 
   useEffect(() => {
     loadConfig()
+    loadSyncStatus()
     setIsSupported(fileSyncService.isSupported())
   }, [])
+
+  const loadSyncStatus = async () => {
+    try {
+      const status = await fileSyncService.getSyncStatus()
+      setSyncStatus(status)
+    } catch (err) {
+      console.error('Failed to load sync status:', err)
+    }
+  }
 
   const loadConfig = async () => {
     try {
@@ -24,6 +40,9 @@ export const FileSyncSettings: React.FC = () => {
         const availableBackups = fileSyncService.getAvailableBackups()
         setBackups(availableBackups)
       }
+
+      // Also reload sync status
+      await loadSyncStatus()
     } catch (err) {
       console.error('Failed to load config:', err)
     }
@@ -35,12 +54,54 @@ export const FileSyncSettings: React.FC = () => {
     setSuccess(null)
 
     try {
-      await fileSyncService.setupSyncFile()
+      const result = await fileSyncService.setupSyncFile()
+
+      // If file has content, warn user before overwriting
+      if (result.fileHasContent) {
+        setShowFileOverwriteWarning(true)
+        setPendingSetup({ needsInitialSave: result.needsInitialSave, fileContent: result.fileContent })
+        setIsSettingUp(false)
+        return
+      }
+
+      // Complete setup
+      await completeSetup(result.needsInitialSave)
+    } catch (err) {
+      setError((err as Error).message)
+    } finally {
+      setIsSettingUp(false)
+    }
+  }
+
+  const completeSetup = async (needsInitialSave: boolean) => {
+    try {
       await loadConfig()
-      setSuccess('✅ Sync configurado! Seus dados serão salvos automaticamente neste arquivo.')
+
+      if (needsInitialSave) {
+        // User has data, save it to the new file
+        setSuccess('✅ Sync configurado! Salvando seus dados atuais...')
+        await fileSyncService.manualSync()
+        setSuccess('✅ Sync configurado! Seus dados foram salvos e serão sincronizados automaticamente.')
+      } else {
+        setSuccess('✅ Sync configurado! Seus dados serão salvos automaticamente neste arquivo.')
+      }
 
       // Initialize service
       await fileSyncService.initialize()
+    } catch (err) {
+      setError((err as Error).message)
+    }
+  }
+
+  const handleConfirmFileOverwrite = async () => {
+    if (!pendingSetup) return
+
+    setIsSettingUp(true)
+    setShowFileOverwriteWarning(false)
+
+    try {
+      await completeSetup(pendingSetup.needsInitialSave)
+      setPendingSetup(null)
     } catch (err) {
       setError((err as Error).message)
     } finally {
@@ -72,7 +133,13 @@ export const FileSyncSettings: React.FC = () => {
         autoSyncEnabled: newState,
       })
       await loadConfig()
-      setSuccess(newState ? 'Auto-sync ativado' : 'Auto-sync desativado')
+
+      // Re-initialize if enabling
+      if (newState) {
+        await fileSyncService.initialize()
+      }
+
+      setSuccess(newState ? 'Auto-sync ativado - mudanças serão salvas automaticamente' : 'Auto-sync desativado')
     } catch (err) {
       setError((err as Error).message)
     }
@@ -94,19 +161,42 @@ export const FileSyncSettings: React.FC = () => {
     }
   }
 
-  const handleLoadFromFile = async () => {
-    if (!confirm('Carregar dados do arquivo? Isso substituirá todos os dados atuais.')) {
-      return
-    }
+  const handleLoadFromFile = async (force: boolean = false) => {
+    if (!force) {
+      // Check for existing data first
+      setIsLoading(true)
+      try {
+        const result = await fileSyncService.loadFromFile(false)
 
-    setError(null)
-    setSuccess(null)
+        if (result.hasExistingData && !result.imported) {
+          // Show warning
+          setShowDataWarning(true)
+          setPendingImport({ content: 'fromFile' })
+          setIsLoading(false)
+          return
+        }
 
-    try {
-      await fileSyncService.loadFromFile()
-      setSuccess('✅ Dados carregados! Recarregue a página para ver as mudanças.')
-    } catch (err) {
-      setError((err as Error).message)
+        if (result.imported) {
+          setSuccess('✅ Dados carregados! Recarregue a página para ver as mudanças.')
+        }
+      } catch (err) {
+        setError((err as Error).message)
+      } finally {
+        setIsLoading(false)
+      }
+    } else {
+      // Force import
+      setIsLoading(true)
+      try {
+        await fileSyncService.loadFromFile(true)
+        setSuccess('✅ Dados carregados! Recarregue a página para ver as mudanças.')
+        setShowDataWarning(false)
+        setPendingImport(null)
+      } catch (err) {
+        setError((err as Error).message)
+      } finally {
+        setIsLoading(false)
+      }
     }
   }
 
@@ -119,18 +209,34 @@ export const FileSyncSettings: React.FC = () => {
     }
   }
 
-  const handleUploadBackup = async (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleUploadBackup = async (event: React.ChangeEvent<HTMLInputElement>, force: boolean = false) => {
     const file = event.target.files?.[0]
     if (!file) return
 
-    if (!confirm('Importar este backup? Todos os dados atuais serão substituídos.')) {
-      event.target.value = ''
-      return
+    if (!force) {
+      // Check for existing data
+      try {
+        const content = await file.text()
+        const hasData = await fileSyncService.hasExistingData()
+
+        if (hasData) {
+          setShowDataWarning(true)
+          setPendingImport({ content })
+          event.target.value = ''
+          return
+        }
+      } catch (err) {
+        setError((err as Error).message)
+        event.target.value = ''
+        return
+      }
     }
 
     try {
-      await fileSyncService.uploadBackup(file)
+      await fileSyncService.uploadBackup(file, force)
       setSuccess('✅ Backup restaurado! Recarregue a página.')
+      setShowDataWarning(false)
+      setPendingImport(null)
       event.target.value = ''
     } catch (err) {
       setError((err as Error).message)
@@ -138,16 +244,54 @@ export const FileSyncSettings: React.FC = () => {
     }
   }
 
-  const handleRestoreBackup = async (backupKey: string) => {
-    if (!confirm('Restaurar este backup? Todos os dados atuais serão substituídos.')) {
-      return
-    }
+  const handleRestoreBackup = async (backupKey: string, force: boolean = false) => {
+    if (!force) {
+      // Check for existing data
+      try {
+        const result = await fileSyncService.restoreFromBackup(backupKey, false)
 
-    try {
-      await fileSyncService.restoreFromBackup(backupKey)
-      setSuccess('✅ Backup restaurado! Recarregue a página.')
-    } catch (err) {
-      setError((err as Error).message)
+        if (result.hasExistingData && !result.imported) {
+          setShowDataWarning(true)
+          setPendingImport({ backupKey })
+          return
+        }
+
+        if (result.imported) {
+          setSuccess('✅ Backup restaurado! Recarregue a página.')
+        }
+      } catch (err) {
+        setError((err as Error).message)
+      }
+    } else {
+      // Force restore
+      try {
+        await fileSyncService.restoreFromBackup(backupKey, true)
+        setSuccess('✅ Backup restaurado! Recarregue a página.')
+        setShowDataWarning(false)
+        setPendingImport(null)
+      } catch (err) {
+        setError((err as Error).message)
+      }
+    }
+  }
+
+  const handleConfirmOverwrite = async () => {
+    if (!pendingImport) return
+
+    if (pendingImport.content === 'fromFile') {
+      await handleLoadFromFile(true)
+    } else if (pendingImport.content) {
+      // Upload from file
+      try {
+        await fileSyncService.importData(pendingImport.content, true)
+        setSuccess('✅ Backup restaurado! Recarregue a página.')
+        setShowDataWarning(false)
+        setPendingImport(null)
+      } catch (err) {
+        setError((err as Error).message)
+      }
+    } else if (pendingImport.backupKey) {
+      await handleRestoreBackup(pendingImport.backupKey, true)
     }
   }
 
@@ -203,7 +347,7 @@ export const FileSyncSettings: React.FC = () => {
                   <input
                     type="file"
                     accept=".json"
-                    onChange={handleUploadBackup}
+                    onChange={(e) => handleUploadBackup(e, false)}
                     className="block w-full text-sm text-gray-600 dark:text-gray-400
                       file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0
                       file:text-sm file:font-medium file:bg-green-600 file:text-white
@@ -231,6 +375,94 @@ export const FileSyncSettings: React.FC = () => {
         </div>
         <div className="text-4xl">💾</div>
       </div>
+
+      {/* File Overwrite Warning Modal */}
+      {showFileOverwriteWarning && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-md w-full p-6">
+            <div className="flex items-start gap-3 mb-4">
+              <div className="text-3xl">⚠️</div>
+              <div>
+                <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-2">
+                  O arquivo selecionado já contém dados!
+                </h3>
+                <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+                  Ao continuar, seus dados atuais serão salvos e <strong>sobrescreverão o conteúdo do arquivo</strong>.
+                </p>
+                <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+                  <strong>Recomendação:</strong> Se o arquivo contém dados importantes, faça uma cópia dele antes de continuar.
+                </p>
+              </div>
+            </div>
+
+            <div className="flex gap-3">
+              <button
+                onClick={() => {
+                  setShowFileOverwriteWarning(false)
+                  setPendingSetup(null)
+                  // Disconnect the sync since user canceled
+                  fileSyncService.disconnect()
+                }}
+                className="flex-1 px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={handleConfirmFileOverwrite}
+                className="flex-1 px-4 py-2 bg-orange-600 hover:bg-orange-700 text-white rounded-lg transition-colors"
+              >
+                Continuar e Sobrescrever
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Data Overwrite Warning Modal */}
+      {showDataWarning && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-md w-full p-6">
+            <div className="flex items-start gap-3 mb-4">
+              <div className="text-3xl">⚠️</div>
+              <div>
+                <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-2">
+                  Você já tem dados salvos!
+                </h3>
+                <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+                  Carregar este backup vai <strong>substituir todos os seus dados atuais</strong>. Esta ação não pode ser desfeita.
+                </p>
+                <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+                  <strong>Recomendação:</strong> Baixe um backup dos seus dados atuais antes de continuar.
+                </p>
+              </div>
+            </div>
+
+            <div className="flex gap-3">
+              <button
+                onClick={() => {
+                  setShowDataWarning(false)
+                  setPendingImport(null)
+                }}
+                className="flex-1 px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={handleDownloadBackup}
+                className="flex-1 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors text-sm"
+              >
+                Baixar Backup Atual
+              </button>
+              <button
+                onClick={handleConfirmOverwrite}
+                className="flex-1 px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors"
+              >
+                Substituir Dados
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {error && (
         <div className="mb-4 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-700 rounded-lg text-sm text-red-700 dark:text-red-400">
@@ -285,7 +517,8 @@ export const FileSyncSettings: React.FC = () => {
             <p className="mb-1">✓ Salva automaticamente a cada 5 segundos</p>
             <p className="mb-1">✓ Mantém 5 backups automáticos</p>
             <p className="mb-1">✓ Funciona com Google Drive, Dropbox, OneDrive</p>
-            <p>✓ Sem necessidade de API keys ou cadastros</p>
+            <p className="mb-1">✓ Sem necessidade de API keys ou cadastros</p>
+            <p>✓ 100% local - dados nunca vão para servidores externos</p>
           </div>
 
           <div className="mt-6 pt-6 border-t border-gray-200 dark:border-gray-700">
@@ -304,7 +537,7 @@ export const FileSyncSettings: React.FC = () => {
                 <input
                   type="file"
                   accept=".json"
-                  onChange={handleUploadBackup}
+                  onChange={(e) => handleUploadBackup(e, false)}
                   className="hidden"
                 />
               </label>
@@ -334,6 +567,29 @@ export const FileSyncSettings: React.FC = () => {
               </button>
             </div>
           </div>
+
+          {/* Warning if sync needs reconfiguration */}
+          {syncStatus?.needsReconfigure && (
+            <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-700 rounded-lg p-4">
+              <div className="flex items-start gap-3">
+                <div className="text-2xl">⚠️</div>
+                <div className="flex-1">
+                  <div className="font-medium text-yellow-900 dark:text-yellow-100 mb-1">
+                    Permissão de arquivo perdida
+                  </div>
+                  <p className="text-sm text-yellow-700 dark:text-yellow-300 mb-3">
+                    O navegador perdeu a permissão para acessar o arquivo de sync. Isso pode acontecer após reiniciar o navegador ou computador.
+                  </p>
+                  <button
+                    onClick={handleSetup}
+                    className="text-sm px-4 py-2 bg-yellow-600 hover:bg-yellow-700 text-white rounded-lg transition-colors"
+                  >
+                    Reconfigurar Sync
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
 
           <div className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
             <div>
@@ -386,13 +642,23 @@ export const FileSyncSettings: React.FC = () => {
             </button>
 
             <button
-              onClick={handleLoadFromFile}
-              className="px-4 py-3 bg-green-600 hover:bg-green-700 text-white font-medium rounded-lg transition-colors flex items-center justify-center gap-2"
+              onClick={() => handleLoadFromFile(false)}
+              disabled={isLoading}
+              className="px-4 py-3 bg-green-600 hover:bg-green-700 text-white font-medium rounded-lg transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
             >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
-              </svg>
-              Carregar do Arquivo
+              {isLoading ? (
+                <>
+                  <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent"></div>
+                  Carregando...
+                </>
+              ) : (
+                <>
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+                  </svg>
+                  Carregar do Arquivo
+                </>
+              )}
             </button>
           </div>
 
@@ -416,7 +682,7 @@ export const FileSyncSettings: React.FC = () => {
                       </div>
                     </div>
                     <button
-                      onClick={() => handleRestoreBackup(backup.key)}
+                      onClick={() => handleRestoreBackup(backup.key, false)}
                       className="text-sm text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 font-medium"
                     >
                       Restaurar
